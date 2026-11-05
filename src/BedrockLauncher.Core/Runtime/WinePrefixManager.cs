@@ -44,6 +44,8 @@ namespace BedrockLauncher.Runtime
             {
                 log($"Creating wine prefix {prefixPath} with {runtime.Name}");
                 int code = await runner.RunAsync(WineCommand(runtime, prefixPath, "wineboot", "-u"), log, cancellationToken);
+                // wineboot returns before wineserver has flushed the registry to disk.
+                await WaitForWineServerAsync(runtime, prefixPath, cancellationToken);
                 if (code != 0 || !IsInitialized(prefixPath))
                     throw new InvalidOperationException($"wineboot failed (exit code {code}) for prefix {prefixPath}.");
             }
@@ -94,6 +96,17 @@ namespace BedrockLauncher.Runtime
             }
             File.WriteAllText(marker, stamp);
             log($"dxvk-uwp installed in {prefixPath}: {stamp}");
+        }
+
+        /// <summary>Waits until every process of the prefix has exited and the registry is saved (wineserver -w).</summary>
+        public async Task WaitForWineServerAsync(GameRuntime runtime, string prefixPath, CancellationToken cancellationToken = default)
+        {
+            string wineserver = runtime.WineServerBinary;
+            if (wineserver == null) return;
+            var command = new LaunchCommand { FileName = wineserver };
+            command.Arguments.Add("-w");
+            command.Environment["WINEPREFIX"] = GetWinePrefix(prefixPath, runtime);
+            await runner.RunAsync(command, log, cancellationToken);
         }
 
         /// <summary>Stops every process of the prefix (wineserver -k).</summary>

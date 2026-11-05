@@ -98,4 +98,4 @@ cat > "$PREFIX/bl-runtime.json" <<JSON
   "built": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 JSON
-log "Done: $PREFIX/bin/wine"
+log "Done: $(ls "$PREFIX"/bin/wine "$PREFIX"/bin/wine64 2>/dev/null | head -1)"
