@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:BedrockLauncher.UI"
+             x:Class="BedrockLauncher.Pages.Preview.BlockPicker">
+    <!-- Component_InstallationBlockPicker.xaml -->
+    <Grid RowDefinitions="Auto,Auto">
+        <ToggleButton x:Name="DropdownButton" Width="85" Height="65" Padding="0" Margin="0,10" HorizontalAlignment="Center" VerticalAlignment="Top"
+                      Background="Transparent" BorderThickness="0" CornerRadius="0" Cursor="Hand">
+            <Grid ColumnDefinitions="*,*">
+                <Image x:Name="SelectedBlockIcon" Height="42" Width="42" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                <Path Grid.Column="1" Margin="10,0,0,0" Width="11" Height="7" Stretch="Uniform" Fill="White" VerticalAlignment="Center"
+                      Data="F1 M 0,0 L 2.667,2.66665 L 5.3334,0 L 5.3334,-1.78168 L 2.6667,0.88501 L0,-1.78168 L0,0 Z"/>
+            </Grid>
+        </ToggleButton>
+        <StackPanel Grid.Row="1" Margin="10,0" IsVisible="{Binding #DropdownButton.IsChecked}">
+            <Polygon HorizontalAlignment="Center" Points="10,0 20,10 0,10" Fill="#1C1C1C"/>
+            <Border CornerRadius="3" Background="#1C1C1C">
+                <ScrollViewer MaxHeight="400" Margin="25,15">
+                    <ItemsControl x:Name="DropdownItemPanel" HorizontalAlignment="Center">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="11"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Button Theme="{StaticResource EmptyButton}" Click="Block_Click" Margin="3" Padding="4" Classes="Block" ToolTip.Tip="{Binding}">
+                                    <Panel Width="40" Height="40">
+                                        <Image Source="{Binding Converter={x:Static ui:Conv.Image}}" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                                        <PathIcon Width="30" Height="30" Foreground="White" Data="{StaticResource PlusIconGeometry}" IsVisible="{Binding Converter={x:Static ui:BlockPickerConverters.IsImport}}"/>
+                                    </Panel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                        <ItemsControl.Styles>
+                            <Style Selector="Button.Block:pointerover">
+                                <Setter Property="Background" Value="#22FFFFFF"/>
+                            </Style>
+                        </ItemsControl.Styles>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+        </StackPanel>
+    </Grid>
+</UserControl>

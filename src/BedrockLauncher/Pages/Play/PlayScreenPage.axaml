@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:play="using:BedrockLauncher.Pages.Play"
+             x:Class="BedrockLauncher.Pages.Play.PlayScreenPage">
+    <Grid RowDefinitions="*,Auto">
+        <Grid RowDefinitions="18,Auto,*" ColumnDefinitions="*,*,*" ClipToBounds="True">
+            <Image x:Name="Background" Grid.ColumnSpan="3" Grid.RowSpan="3" Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality">
+                <Image.Effect>
+                    <BlurEffect Radius="1"/>
+                </Image.Effect>
+            </Image>
+            <Image x:Name="BedrockLogo" Classes="Logo" VerticalAlignment="Top" HorizontalAlignment="Center" Grid.Column="1" Grid.Row="1" MaxHeight="{StaticResource MaxLogoHeight}"
+                   Source="avares://BedrockLauncher/Resources/images/logo/BedrockEdition.png" Stretch="Uniform" Margin="0,18,0,0">
+                <Image.Styles>
+                    <Style Selector="Image.Logo">
+                        <Style.Animations>
+                            <Animation Duration="0:0:0.35" FillMode="Forward">
+                                <KeyFrame Cue="0%"><Setter Property="Margin" Value="0,-55,0,0"/></KeyFrame>
+                                <KeyFrame Cue="43%"><Setter Property="Margin" Value="0,28,0,0"/></KeyFrame>
+                                <KeyFrame Cue="71%"><Setter Property="Margin" Value="0,18,0,0"/></KeyFrame>
+                                <KeyFrame Cue="86%"><Setter Property="Margin" Value="0,24,0,0"/></KeyFrame>
+                                <KeyFrame Cue="100%"><Setter Property="Margin" Value="0,18,0,0"/></KeyFrame>
+                            </Animation>
+                        </Style.Animations>
+                    </Style>
+                </Image.Styles>
+            </Image>
+        </Grid>
+        <play:PlayBar Grid.Row="1" VerticalAlignment="Bottom"/>
+    </Grid>
+</UserControl>

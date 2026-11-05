@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="using:BedrockLauncher.Classes"
+             xmlns:p="using:BedrockLauncher.Pages.Preview"
+             x:Class="BedrockLauncher.Pages.Preview.EditInstallationScreen"
+             Background="{DynamicResource Background.Dialog}">
+    <Grid RowDefinitions="60,Auto,*,Auto,75">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+            <Button Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Theme="{StaticResource ClosePopupButton}" Click="Close_Click" Margin="0,0,10,0"/>
+            <TextBlock Grid.ColumnSpan="3" x:Name="Header" Text="{DynamicResource EditInstallationScreen_Title}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White" FontWeight="Bold" FontSize="20"/>
+        </Grid>
+        <Separator Grid.Row="1"/>
+        <ScrollViewer Grid.Row="2">
+            <StackPanel Margin="0,0,0,60">
+                <p:BlockPicker x:Name="InstallationIconSelect" HorizontalAlignment="Center"/>
+                <StackPanel Width="330" HorizontalAlignment="Center">
+                    <TextBlock Margin="0,28,0,5" Text="{DynamicResource EditInstallationScreen_NameSubtitle}" Classes="HeaderTextblock"/>
+                    <TextBox x:Name="InstallationNameField" Height="32" Width="330" Watermark="{DynamicResource EditInstallationScreen_NameHintText}" VerticalContentAlignment="Center"/>
+                    <TextBlock Margin="0,28,0,5" Text="{DynamicResource EditInstallationScreen_VersionSubtitle}" Classes="HeaderTextblock"/>
+                    <ContentControl Theme="{StaticResource TextboxLikeFrame}" Height="32">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <ComboBox x:Name="InstallationVersionSelect" Theme="{StaticResource BlankComboBoxStyle}" Height="32" Padding="13,0,0,0" BorderThickness="0">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate DataType="c:MCVersion">
+                                        <TextBlock Classes="CommonTextblock" Text="{Binding DisplayName}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Button Grid.Column="1" Content="•••" Click="MoreVersionsButton_Click" Margin="5,0" Padding="6,0" Background="Transparent" Foreground="White" VerticalAlignment="Stretch"/>
+                        </Grid>
+                    </ContentControl>
+                    <TextBlock x:Name="RuntimeHint" Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource SecondaryText.Foreground}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+        <Separator Grid.Row="3"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4" Height="45" Margin="15,0">
+            <Button Click="Close_Click" Content="{DynamicResource GeneralText_Cancel}" Theme="{StaticResource DialogButton}"/>
+            <Button x:Name="CreateButton" Click="CreateButton_Click" Content="{DynamicResource EditInstallationScreen_CreateButton}" Theme="{StaticResource DialogButton_Green}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

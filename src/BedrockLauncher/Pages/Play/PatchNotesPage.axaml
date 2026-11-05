@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="using:BedrockLauncher.Classes.Launcher"
+             xmlns:d="using:BedrockLauncher.Downloaders"
+             xmlns:g="using:BedrockLauncher.Pages.General"
+             xmlns:ui="using:BedrockLauncher.UI"
+             x:Class="BedrockLauncher.Pages.Play.PatchNotesPage"
+             x:DataType="d:ChangelogDownloader"
+             Background="#FF282828">
+    <Grid RowDefinitions="60,*">
+        <Border BorderThickness="0,0,0,1" BorderBrush="Gray">
+            <Grid Background="#FF303030" ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Margin="10,0">
+                    <TextBlock Foreground="White" Text="{DynamicResource GeneralSubtitles_Versions}" Margin="5,10,0,0" FontWeight="Bold"/>
+                    <StackPanel Orientation="Horizontal" Height="35" Margin="0,-4,0,0">
+                        <CheckBox x:Name="ReleasesCheckBox" IsChecked="{Binding ShowReleases}" Click="RefreshList" Content="{DynamicResource GeneralText_Releases}" Margin="5,0,0,0"/>
+                        <CheckBox x:Name="BetasCheckBox" IsChecked="{Binding ShowBetas}" Click="RefreshList" Content="{DynamicResource GeneralText_Betas}" Margin="5,0,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <Button IsEnabled="{Binding IsRefreshable}" Margin="0,1" FontSize="14" HorizontalAlignment="Right" Click="Refresh_Click" Content="{DynamicResource GeneralText_Refresh}" Theme="{StaticResource LinkButton}"/>
+                    <Button Margin="0,1" FontSize="14" HorizontalAlignment="Right" Click="MorePatchNotes_Click" Content="{DynamicResource PatchNotesPage_MorePatchNotes}" Theme="{StaticResource LinkButton}"/>
+                    <Button Margin="0,1" FontSize="14" HorizontalAlignment="Right" Click="MoreBetaPatchNotes_Click" Content="{DynamicResource PatchNotesPage_MorePatchNotesBeta}" Theme="{StaticResource LinkButton}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl x:Name="PatchNotesList" ItemsSource="{Binding PatchNotes}" Margin="65,10">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="c:PatchNotes_Game_Item">
+                        <!-- FeedItem_PatchNotes.xaml -->
+                        <Button Theme="{StaticResource EmptyButton}" Click="FeedItem_Click" Margin="5" Classes="Card">
+                            <Border Background="{DynamicResource CardListViewItem.Static.Background}" Width="240" Height="315" Classes="CardBorder">
+                                <Grid RowDefinitions="240,*">
+                                    <ui:WebImage Url="{Binding image_url}" Fallback="{Binding fallback_image}" Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="None"/>
+                                    <TextBlock Text="{Binding title}" Grid.Row="1" FontWeight="Bold" FontSize="16" Margin="10" TextWrapping="Wrap" Foreground="White"/>
+                                </Grid>
+                            </Border>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                <ItemsControl.Styles>
+                    <Style Selector="Button.Card:pointerover Border.CardBorder">
+                        <Setter Property="Background" Value="{DynamicResource CardListViewItem.MouseOver.Background}"/>
+                    </Style>
+                </ItemsControl.Styles>
+            </ItemsControl>
+        </ScrollViewer>
+        <g:ResultPanel Grid.Row="1" x:Name="NothingFound" PanelType="Loading"/>
+    </Grid>
+</UserControl>

@@ -1,0 +1,15 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:g="using:BedrockLauncher.Pages.General"
+             x:Class="BedrockLauncher.Pages.Preview.WaitingPage">
+    <UserControl.Background>
+        <ImageBrush Source="avares://BedrockLauncher/Resources/images/bg/firstlaunchbackground.jpg" Stretch="UniformToFill"/>
+    </UserControl.Background>
+    <Grid Background="#7F000000">
+        <TextBlock Foreground="White" FontSize="11" FontWeight="Bold" Text="{DynamicResource MainWindow_Disclaimer}" Margin="20" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+        <StackPanel VerticalAlignment="Center">
+            <g:LoaderIcon Width="150" Height="150" Margin="0,0,0,20"/>
+            <TextBlock Text="{DynamicResource Dialog_ResultPanel_Loading_Title}" HorizontalAlignment="Center" Foreground="White" FontSize="40" FontFamily="{StaticResource MinecraftTen}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

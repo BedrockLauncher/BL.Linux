@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:html="clr-namespace:TheArtOfDev.HtmlRenderer.Avalonia;assembly=Avalonia.HtmlRenderer"
+             x:Class="BedrockLauncher.Pages.Preview.ChangelogPreviewPage"
+             Background="{DynamicResource Background.Dialog}">
+    <Grid RowDefinitions="60,Auto,*">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+            <Button Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Theme="{StaticResource ClosePopupButton}" Click="CloseButton_Click" Margin="0,0,10,0"/>
+            <Button Theme="{StaticResource LinkButton}" x:Name="SourceButton" Click="SourceButton_Click" Padding="10,0" Grid.ColumnSpan="3" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Foreground="White" FontWeight="Bold" FontSize="20" x:Name="Header"/>
+            </Button>
+        </Grid>
+        <Separator Grid.Row="1"/>
+        <ScrollViewer Grid.Row="2">
+            <html:HtmlPanel x:Name="Renderer" Margin="10" Background="Transparent"/>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

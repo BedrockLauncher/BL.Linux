@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="BedrockLauncher.Pages.Play.GameTabs"
+             Background="{DynamicResource Background.Primary}" ClipToBounds="True">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Height="84" Background="{DynamicResource Background.Primary}" ZIndex="1">
+            <TextBlock Text="{DynamicResource GameTab_Title}" Margin="17,32,0,0" Classes="TabTitle" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+            <StackPanel HorizontalAlignment="Left" Height="35" VerticalAlignment="Top" Orientation="Horizontal" Margin="5,49,0,0">
+                <ToggleButton x:Name="PlayButton" Click="Tab_Click" Content="{DynamicResource GameTab_PlayButton_Text}" Theme="{StaticResource ToolbarButton}" IsChecked="True" ToolTip.Tip="{DynamicResource GameTab_PlayButton_Text}"/>
+                <ToggleButton x:Name="CreatorToolsButton" Click="Tab_Click" Content="{DynamicResource GameTab_CreatorToolsButton_Text}" Theme="{StaticResource ToolbarButton}" ToolTip.Tip="{DynamicResource GameTab_CreatorToolsButton_Text}"/>
+                <ToggleButton x:Name="InstallationsButton" Click="Tab_Click" Content="{DynamicResource GameTab_InstallationsButton_Text}" Theme="{StaticResource ToolbarButton}" ToolTip.Tip="{DynamicResource GameTab_InstallationsButton_Text}"/>
+                <ToggleButton x:Name="PatchNotesButton" Click="Tab_Click" Content="{DynamicResource GameTab_PatchNotesButton_Text}" Theme="{StaticResource ToolbarButton}" ToolTip.Tip="{DynamicResource GameTab_PatchNotesButton_Text}"/>
+            </StackPanel>
+        </Grid>
+        <Panel Grid.Row="1" Background="{DynamicResource Background.Tertiary}"/>
+        <ContentControl Grid.Row="1" x:Name="MainPageFrame"/>
+    </Grid>
+</UserControl>

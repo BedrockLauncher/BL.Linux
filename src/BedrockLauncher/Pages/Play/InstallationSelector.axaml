@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="using:BedrockLauncher.Classes"
+             xmlns:ui="using:BedrockLauncher.UI"
+             x:Class="BedrockLauncher.Pages.Play.InstallationSelector">
+    <!-- InstallationSelector.xaml + InstallationSelectorItem.xaml -->
+    <ComboBox x:Name="Combo" Theme="{StaticResource InstallationSelectorComboBoxStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+              Padding="4,4,5,4" SelectionChanged="Combo_SelectionChanged">
+        <ComboBox.ItemTemplate>
+            <DataTemplate DataType="c:BLInstallation">
+                <Grid Height="34">
+                    <Image Source="{Binding IconPath_Full, Converter={x:Static ui:Conv.Image}}" HorizontalAlignment="Left" Width="32" Height="32" Margin="5,1,0,0"
+                           RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                    <TextBlock FontSize="12" Foreground="{DynamicResource PrimaryText.Foreground}" FontWeight="SemiBold" Padding="45,0,0,0" Text="{Binding DisplayName_Full}" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock FontSize="10" Foreground="{DynamicResource SecondaryText.Foreground}" Padding="45,18,0,0" Text="{Binding VersionName}"/>
+                </Grid>
+            </DataTemplate>
+        </ComboBox.ItemTemplate>
+    </ComboBox>
+</UserControl>

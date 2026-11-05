@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:play="using:BedrockLauncher.Pages.Play"
+             x:Class="BedrockLauncher.Pages.Play.CreatorToolsPage">
+    <Grid RowDefinitions="*,Auto">
+        <Grid RowDefinitions="100,18,Auto,*" ClipToBounds="True">
+            <Image Grid.Row="2" Grid.RowSpan="2" Stretch="UniformToFill" Source="avares://BedrockLauncher/Resources/images/bg/creatortools_screen/editor-header-image.png">
+                <Image.Effect><BlurEffect Radius="1"/></Image.Effect>
+            </Image>
+            <Rectangle Grid.Row="0">
+                <Rectangle.Fill>
+                    <ImageBrush Source="avares://BedrockLauncher/Resources/images/ui/decorations/EditorBannerDecoration.png" TileMode="Tile"
+                                DestinationRect="0,0,8,100" Stretch="Fill" AlignmentX="Left" AlignmentY="Top"/>
+                </Rectangle.Fill>
+            </Rectangle>
+            <Grid Grid.Row="0" RowDefinitions="75,25">
+                <TextBlock Foreground="White" Text="{DynamicResource CreatorToolsPage_Editor}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           FontFamily="{StaticResource MinecraftTen}" FontSize="40"/>
+                <TextBlock Grid.Row="1" Text="{DynamicResource CreatorToolsPage_Slogan}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Top"
+                           FontFamily="{StaticResource MinecraftSeven}" FontSize="16"/>
+            </Grid>
+        </Grid>
+        <play:PlayBar Grid.Row="1" VerticalAlignment="Bottom" LaunchEditor="True"/>
+    </Grid>
+</UserControl>

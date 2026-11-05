@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="using:BedrockLauncher.Classes"
+             xmlns:ui="using:BedrockLauncher.UI"
+             x:Class="BedrockLauncher.Pages.Preview.EditInstallationVersionSelectScreen">
+    <Grid RowDefinitions="75,Auto,*,Auto,75" Background="#FF303030">
+        <StackPanel Margin="15,0" VerticalAlignment="Center">
+            <TextBlock Foreground="White" Text="{DynamicResource GeneralSubtitles_Search}" Margin="0,0,0,4" FontWeight="Bold"/>
+            <ContentControl Theme="{StaticResource TextboxLikeFrame}" Height="30">
+                <Grid ColumnDefinitions="Auto,*">
+                    <PathIcon Width="16" Height="16" Margin="7,0,0,0" Foreground="White" Data="{StaticResource SearchIconGeometry}"/>
+                    <TextBox Grid.Column="1" Theme="{StaticResource BlankTextBox}" x:Name="SearchBox" Watermark="{DynamicResource InstallationVersionSelect_SearchBar_Content}" TextChanged="Filter_Changed"/>
+                </Grid>
+            </ContentControl>
+        </StackPanel>
+        <Separator Grid.Row="1" Margin="0"/>
+        <Grid Grid.Row="2" ColumnDefinitions="256,*" Background="{DynamicResource Background.Primary}">
+            <StackPanel Margin="10">
+                <StackPanel.Styles>
+                    <Style Selector="CheckBox">
+                        <Setter Property="Margin" Value="5,0,0,0"/>
+                        <Setter Property="MinHeight" Value="28"/>
+                    </Style>
+                    <Style Selector="TextBlock.Head">
+                        <Setter Property="Foreground" Value="{DynamicResource PrimaryText.Foreground}"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="Margin" Value="5,10,0,4"/>
+                    </Style>
+                </StackPanel.Styles>
+                <TextBlock Classes="Head" Text="{DynamicResource GeneralSubtitles_Versions}"/>
+                <CheckBox x:Name="ShowRelease" Content="{DynamicResource GeneralText_Releases}" IsChecked="True" IsCheckedChanged="Filter_Changed"/>
+                <CheckBox x:Name="ShowBeta" Content="{DynamicResource GeneralText_Betas}" IsChecked="True" IsCheckedChanged="Filter_Changed"/>
+                <CheckBox x:Name="ShowPreview" Content="{DynamicResource GeneralText_Previews}" IsChecked="True" IsCheckedChanged="Filter_Changed"/>
+                <CheckBox x:Name="ShowImported" Content="{DynamicResource GeneralText_Imported}" IsChecked="True" IsCheckedChanged="Filter_Changed" Margin="5,15,0,0"/>
+                <TextBlock Classes="Head" Text="{DynamicResource GeneralSubtitles_Architectures}"/>
+                <CheckBox x:Name="ShowX86" Content="x86" IsChecked="False" IsCheckedChanged="Filter_Changed"/>
+                <CheckBox x:Name="ShowX64" Content="x64" IsChecked="True" IsCheckedChanged="Filter_Changed"/>
+                <CheckBox x:Name="ShowARM" Content="ARM" IsChecked="False" IsCheckedChanged="Filter_Changed"/>
+                <TextBlock Classes="Head" Text="Package Type"/>
+                <CheckBox x:Name="ShowUWP" Content="UWP" IsChecked="True" IsCheckedChanged="Filter_Changed"/>
+                <CheckBox x:Name="ShowGDK" Content="GDK" IsChecked="True" IsCheckedChanged="Filter_Changed"/>
+            </StackPanel>
+            <ListBox Grid.Column="1" x:Name="VersionsList" SelectionMode="Single" DoubleTapped="VersionsList_DoubleTapped">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="c:MCVersion">
+                        <!-- Component_VersionSelectItem.xaml -->
+                        <Grid ColumnDefinitions="Auto,*" Margin="10,8">
+                            <Image Source="{Binding IconPath, Converter={x:Static ui:Conv.Image}}" Width="40" Height="40"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                                <TextBlock FontSize="16" Foreground="{DynamicResource PrimaryText.Foreground}" FontWeight="SemiBold" Text="{Binding DisplayName}"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource SecondaryText.Foreground}" FontWeight="SemiBold" Text="{Binding InstallationSize}"/>
+                                <TextBlock FontSize="9" Foreground="{DynamicResource TertiaryText.Foreground}" FontWeight="SemiBold" Text="{Binding UUID}"/>
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+        <Separator Grid.Row="3" Margin="0"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4" Height="45" Margin="15,0">
+            <Button Click="Cancel_Click" Content="{DynamicResource GeneralText_Cancel}" Theme="{StaticResource DialogButton}"/>
+            <Button Click="Select_Click" Content="{DynamicResource GeneralText_Select}" Theme="{StaticResource DialogButton_Green}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

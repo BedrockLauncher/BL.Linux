@@ -1,0 +1,10 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="BedrockLauncher.Pages.Preview.EditProfileScreen"
+             Background="#BF000000">
+    <Grid>
+        <Border CornerRadius="2" Background="#FF262626" Width="600" Height="258" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 0 6 0 #F2000000">
+            <ContentControl x:Name="ProfileControlContainer"/>
+        </Border>
+    </Grid>
+</UserControl>

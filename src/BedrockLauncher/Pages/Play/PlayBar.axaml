@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:play="using:BedrockLauncher.Pages.Play"
+             xmlns:vm="using:BedrockLauncher.ViewModels"
+             x:Class="BedrockLauncher.Pages.Play.PlayBar"
+             x:DataType="vm:MainDataModel">
+    <!-- Bottom bar of PlayScreenPage / CreatorToolsPage: installation selector, big play button, disclaimer -->
+    <Grid x:Name="PlayScreenBorder" Background="#FF262626" Height="58" ClipToBounds="False">
+        <TextBlock Classes="HeaderTextblock" Text="{DynamicResource MainWindow_Disclaimer}" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="0,0,5,0"/>
+        <Button x:Name="MainPlayButton" Click="MainPlayButton_Click" HorizontalAlignment="Center" Margin="0,-8,0,0" VerticalAlignment="Top"
+                Width="250" Height="56" Padding="0" Theme="{StaticResource BigGreenButton}">
+            <TextBlock x:Name="PlayButtonText" Classes="BigGreenButton_Text"/>
+        </Button>
+        <play:InstallationSelector x:Name="InstallationsList" HorizontalAlignment="Left" Margin="4,4,0,4" VerticalAlignment="Top" Width="250" Height="50"/>
+    </Grid>
+</UserControl>

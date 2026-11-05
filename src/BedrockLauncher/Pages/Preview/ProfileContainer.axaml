@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="BedrockLauncher.Pages.Preview.ProfileContainer"
+             Width="596" Height="254">
+    <!-- Component_AddProfileContainer.xaml -->
+    <Grid>
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" ColumnDefinitions="Auto,Auto">
+            <Button x:Name="ImageButton" Margin="0,0,10,0" Click="ImageButton_Click" Width="100" Height="100" Cursor="Hand" Padding="0" Background="Transparent">
+                <Button.Template>
+                    <ControlTemplate>
+                        <Border Name="ring" BorderThickness="2" BorderBrush="Transparent" CornerRadius="50" ClipToBounds="True">
+                            <ContentPresenter Content="{TemplateBinding Content}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+                <Button.Styles>
+                    <Style Selector="Button:pointerover /template/ Border#ring, Button:focus-visible /template/ Border#ring">
+                        <Setter Property="BorderBrush" Value="White"/>
+                    </Style>
+                </Button.Styles>
+                <Border CornerRadius="48" ClipToBounds="True">
+                    <Image x:Name="ProfileImage" Stretch="Fill"/>
+                </Border>
+            </Button>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Text="{DynamicResource NewProfile_ProfileNameHeader}" Foreground="White" FontWeight="Bold" FontSize="11" Height="16"/>
+                <TextBox x:Name="ProfileNameTextbox" MaxLength="35" FontSize="14" Height="32" Width="275" KeyDown="ProfileNameTextbox_KeyDown" TextChanged="ProfileNameTextbox_TextChanged"/>
+            </StackPanel>
+        </Grid>
+        <TextBlock x:Name="Subtitle" HorizontalAlignment="Center" VerticalAlignment="Top" Text="{DynamicResource NewProfile_CreateProfileSubTitle}" Foreground="White" FontSize="24" Margin="0,30,0,0" FontWeight="Bold"/>
+        <Button x:Name="CreateProfileButton" Click="CreateProfileButton_Click" HorizontalAlignment="Center" Margin="0,0,0,7" VerticalAlignment="Bottom" Width="250" Height="56" Padding="0" Theme="{StaticResource BigGreenButton}" IsEnabled="False">
+            <TextBlock x:Name="CreateProfileButtonText" Text="{DynamicResource NewProfile_CreateProfileButton}" Classes="BigGreenButton_Text"/>
+        </Button>
+        <Button x:Name="BackButton" Click="BackButton_Click" Content="{DynamicResource NewProfile_GoBackButton}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,8,8"
+                Height="20" FontSize="11" Padding="8,0" Background="{DynamicResource DialogMiniButton.Static.Background}" Foreground="White" CornerRadius="0"/>
+    </Grid>
+</UserControl>
