@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BedrockLauncher.Core", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BedrockLauncher", "src\BedrockLauncher\BedrockLauncher.csproj", "{0C8D4E0E-7090-46DE-B799-2FA05257AB3C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{35880A5A-71C5-4B3E-9387-93B9437DA741}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BedrockLauncher.Linux.Tests", "tests\BedrockLauncher.Linux.Tests\BedrockLauncher.Linux.Tests.csproj", "{A4BA2B86-E01B-4795-A1C9-30A7B3078718}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,10 +36,15 @@ Global
 		{0C8D4E0E-7090-46DE-B799-2FA05257AB3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C8D4E0E-7090-46DE-B799-2FA05257AB3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0C8D4E0E-7090-46DE-B799-2FA05257AB3C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4BA2B86-E01B-4795-A1C9-30A7B3078718}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4BA2B86-E01B-4795-A1C9-30A7B3078718}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4BA2B86-E01B-4795-A1C9-30A7B3078718}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4BA2B86-E01B-4795-A1C9-30A7B3078718}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFBF0ACA-9195-41BD-84DE-E99521B519B2} = {87DE6524-B4FD-4E6C-9F07-6B047D905127}
 		{DC0A4BC5-4044-4C97-9711-7198CE2F846E} = {87DE6524-B4FD-4E6C-9F07-6B047D905127}
 		{0C8D4E0E-7090-46DE-B799-2FA05257AB3C} = {87DE6524-B4FD-4E6C-9F07-6B047D905127}
+		{A4BA2B86-E01B-4795-A1C9-30A7B3078718} = {35880A5A-71C5-4B3E-9387-93B9437DA741}
 	EndGlobalSection
 EndGlobal
