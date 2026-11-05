@@ -1,0 +1,499 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using BedrockLauncher.Classes;
+using Newtonsoft.Json;
+using BedrockLauncher.Enums;
+using System.ComponentModel;
+using BedrockLauncher.ViewModels;
+using System.Diagnostics;
+
+namespace BedrockLauncher.Classes
+{
+
+    public class BLProfileList : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+        public int Version = 2;
+
+        public BLProfileList()
+        {
+            Properties.LauncherSettings.DefaultChanged += Subscribe;
+            Subscribe();
+        }
+
+        // Upstream used PostSharp's Depends.On(LauncherSettings...): forward the settings' changes by hand.
+        private void Subscribe()
+        {
+            Properties.LauncherSettings.Default.PropertyChanged -= Settings_PropertyChanged;
+            Properties.LauncherSettings.Default.PropertyChanged += Settings_PropertyChanged;
+        }
+
+        private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Properties.LauncherSettings.CurrentProfileUUID))
+            {
+                OnPropertyChanged(nameof(CurrentProfile));
+                OnPropertyChanged(nameof(CurrentProfileImagePath));
+                OnPropertyChanged(nameof(CurrentInstallations));
+                OnPropertyChanged(nameof(CurrentInstallation));
+            }
+            else if (e.PropertyName == nameof(Properties.LauncherSettings.CurrentInstallationUUID))
+            {
+                OnPropertyChanged(nameof(CurrentInstallationUUID));
+                OnPropertyChanged(nameof(CurrentInstallation));
+            }
+        }
+
+
+
+        public Dictionary<string, BLProfile> profiles { get; set; } = new Dictionary<string, BLProfile>();
+
+        #region Runtime Values
+        [JsonIgnore]
+        public string FilePath { get; private set; } = string.Empty;
+
+        [JsonIgnore]
+        public string CurrentInstallationUUID
+        {
+            get
+            {
+                return Properties.LauncherSettings.Default.CurrentInstallationUUID;
+            }
+            set
+            {
+                Properties.LauncherSettings.Default.CurrentInstallationUUID = value;
+                Properties.LauncherSettings.Default.Save();
+            }
+        }
+        [JsonIgnore] 
+        public BLProfile CurrentProfile
+        {
+            get
+            {
+                if (profiles.ContainsKey(Properties.LauncherSettings.Default.CurrentProfileUUID)) return profiles[Properties.LauncherSettings.Default.CurrentProfileUUID];
+                else return null;
+            }
+            set
+            {
+                if (profiles.ContainsKey(Properties.LauncherSettings.Default.CurrentProfileUUID)) profiles[Properties.LauncherSettings.Default.CurrentProfileUUID] = value;
+            }
+        }
+
+        [JsonIgnore]
+        public string CurrentProfileImagePath
+        {
+            get
+            {
+                if (profiles.ContainsKey(Properties.LauncherSettings.Default.CurrentProfileUUID)) return profiles[Properties.LauncherSettings.Default.CurrentProfileUUID].ImagePath;
+                return string.Empty;
+            }
+        }
+        [JsonIgnore] 
+        public BLInstallation CurrentInstallation
+        {
+            get
+            {
+                if (CurrentProfile == null) return null;
+                else if (CurrentInstallations == null) return null;
+                else if (CurrentInstallations.Any(x => x.InstallationUUID == CurrentInstallationUUID))
+                    return CurrentInstallations.First(x => x.InstallationUUID == CurrentInstallationUUID);
+                else return null;
+            }
+            set
+            {
+                if (CurrentProfile == null) return;
+                else if (CurrentInstallations == null) return;
+                else if (CurrentInstallations.Any(x => x.InstallationUUID == CurrentInstallationUUID))
+                {
+                    int index = CurrentInstallations.FindIndex(x => x.InstallationUUID == CurrentInstallationUUID);
+                    CurrentInstallations[index] = value;
+                }
+                else return;
+            }
+        }
+        [JsonIgnore] 
+        public ObservableCollection<BLInstallation> CurrentInstallations
+        {
+            get
+            {
+                if (CurrentProfile == null) return null;
+                else if (CurrentProfile.Installations == null) return null;
+                else return CurrentProfile.Installations;
+            }
+            set
+            {
+                if (CurrentProfile == null) return;
+                else if (CurrentProfile.Installations == null) return;
+                else CurrentProfile.Installations = value;
+            }
+        }
+
+        #endregion
+
+        #region IO Methods
+
+        public static BLProfileList Load(string filePath, string lastProfile = null, string lastInstallation = null)
+        {
+            string json;
+            BLProfileList fileData = new BLProfileList();
+            if (File.Exists(filePath))
+            {
+                json = File.ReadAllText(filePath);
+                try
+                {
+                    fileData = JsonConvert.DeserializeObject<BLProfileList>(json, new JsonSerializerSettings()
+                    {
+                        NullValueHandling = NullValueHandling.Include,
+                        MissingMemberHandling = MissingMemberHandling.Ignore
+                    });
+                }
+                catch
+                {
+                    fileData = new BLProfileList();
+                }
+            }
+            fileData.FilePath = filePath;
+            fileData.Init(lastProfile, lastInstallation);
+            fileData.Validate();
+            return fileData;
+        }
+        public void Init(string lastProfile = null, string lastInstallation = null)
+        {
+            foreach(var profile in profiles) profile.Value.UUID = profile.Key;
+
+            if (!string.IsNullOrEmpty(lastProfile) && profiles.ContainsKey(lastProfile)) Properties.LauncherSettings.Default.CurrentProfileUUID = lastProfile;
+            else if (profiles.Count != 0 && !profiles.ContainsKey(Properties.LauncherSettings.Default.CurrentProfileUUID ?? string.Empty))
+                Properties.LauncherSettings.Default.CurrentProfileUUID = profiles.First().Key;
+
+            if (CurrentProfile != null)
+            {
+                if (CurrentInstallations.Any(x => x.InstallationUUID == lastInstallation)) CurrentInstallationUUID = lastInstallation;
+                else if (CurrentInstallations.Count != 0 && !CurrentInstallations.Any(x => x.InstallationUUID == CurrentInstallationUUID))
+                    CurrentInstallationUUID = CurrentInstallations.First().InstallationUUID;
+            }
+        }
+        public void Save(string filePath)
+        {
+            string json = JsonConvert.SerializeObject(this, Formatting.Indented);
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(filePath)));
+            File.WriteAllText(filePath, json);
+        }
+        public void Save()
+        {
+            if (!string.IsNullOrEmpty(FilePath)) Save(FilePath);
+        }
+        public void Validate()
+        {
+            BLInstallation latest_release = new BLInstallation()
+            {
+                DisplayName = "Latest Release", //TODO: Localize Display Names
+                DirectoryName = "Latest Release",  //TODO: Localize Directory Names?
+                VersionUUID = Constants.LATEST_RELEASE_UUID,
+                VersioningMode = VersioningMode.LatestRelease,
+                IconPath = Constants.INSTALLATIONS_LATEST_RELEASE_ICONPATH,
+                IsCustomIcon = false,
+                ReadOnly = true,
+                InstallationUUID = Constants.LATEST_RELEASE_UUID
+            };
+            BLInstallation latest_preview = new BLInstallation()
+            {
+                DisplayName = "Latest Preview",  //TODO: Localize Display Names
+                DirectoryName = "Latest Preview",  //TODO: Localize Directory Names?
+                VersionUUID = Constants.LATEST_PREVIEW_UUID,
+                VersioningMode = VersioningMode.LatestPreview,
+                IconPath = Constants.INSTALLATIONS_LATEST_PREVIEW_ICONPATH, 
+                IsCustomIcon = false,
+                ReadOnly = true,
+                InstallationUUID = Constants.LATEST_PREVIEW_UUID
+            };
+
+
+            foreach (var profile in profiles.Values)
+            {
+                profile.Installations ??= new ObservableCollection<BLInstallation>();
+                if (!profile.Installations.Any(x => x.InstallationUUID == latest_release.InstallationUUID && x.ReadOnly))
+                    profile.Installations.Add(latest_release.Clone(keepUuid: true));
+                if (!profile.Installations.Any(x => x.InstallationUUID == latest_preview.InstallationUUID && x.ReadOnly))
+                    profile.Installations.Add(latest_preview.Clone(keepUuid: true));
+
+                foreach (var installation in profile.Installations.Where(x => x.VersionUUID == latest_release.VersionUUID))
+                    installation.VersioningMode = VersioningMode.LatestRelease;
+
+                foreach (var installation in profile.Installations.Where(x => x.VersionUUID == latest_preview.VersionUUID))
+                    installation.VersioningMode = VersioningMode.LatestPreview;
+            }
+
+            Save();
+        }
+
+        private void GenerateProfileImage(string img, string uuid)
+        {
+            string path = MainDataModel.Default.FilePaths.GetProfilePath(uuid);
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+            string new_img = Path.Combine(path, Constants.PROFILE_CUSTOM_IMG_NAME);
+            if (string.IsNullOrEmpty(img)) return;
+            else
+            {
+                try
+                {
+                    File.Copy(img, new_img, true);
+                }
+                catch
+                {
+                    //TODO: Add Error Message
+                }
+            }
+
+        }
+
+        #endregion
+
+        #region Management Methods
+        string ValidatePathName(string pathName)
+        {
+            char[] invalidFileNameChars = Path.GetInvalidFileNameChars();
+            return new string(pathName.Select(ch => invalidFileNameChars.Contains(ch) ? '_' : ch).ToArray());
+        }
+        public bool Profile_Add(string name, string uuid, string directory, string img)
+        {
+            var real_directory = ValidatePathName(directory);
+            BLProfile profileSettings = new BLProfile(name, real_directory, uuid);
+            
+
+            if (profiles.ContainsKey(uuid)) return false;
+            else
+            {
+                profiles.Add(uuid, profileSettings);
+                GenerateProfileImage(img, uuid);
+
+                Profile_Switch(uuid);
+                Validate();
+                Save();
+                return true;
+            }
+
+        }
+        public bool Profile_Edit(string name, string uuid, string directory, string img)
+        {
+            var real_directory = ValidatePathName(directory);
+
+            if (!profiles.ContainsKey(uuid)) return false;
+            else
+            {
+                profiles[uuid].Name = name;
+                profiles[uuid].ProfilePath = name;
+                GenerateProfileImage(img, uuid);
+
+                Profile_Switch(uuid);
+                Validate();
+                Save();
+                return true;
+            }
+
+        }
+        public void Profile_Remove(string profileUUID)
+        {
+            if (profiles.ContainsKey(profileUUID) && profiles.Count > 1)
+            {
+                profiles.Remove(profileUUID);
+                Save();
+                Profile_Switch(profiles.FirstOrDefault().Key);
+            }
+
+        }
+        public void Profile_Switch(string profileUUID)
+        {
+            if (profiles.ContainsKey(profileUUID))
+            {
+                Properties.LauncherSettings.Default.CurrentProfileUUID = profileUUID;      
+                Properties.LauncherSettings.Default.Save();
+
+                OnPropertyChanged(nameof(CurrentProfile));
+                OnPropertyChanged(nameof(CurrentInstallations));
+                OnPropertyChanged(nameof(CurrentInstallation));
+                OnPropertyChanged(nameof(CurrentProfileImagePath));
+            }
+        }
+
+        public void Installation_Add(BLInstallation installation)
+        {
+            if (CurrentProfile == null || CurrentInstallations == null) return;
+            if (!CurrentInstallations.Any(x => x.InstallationUUID == installation.InstallationUUID))
+            {
+                CurrentInstallations.Add(installation);
+                Save();
+            }
+        }
+
+        public void Installation_Move(BLInstallation installation, bool moveUp)
+        {
+            if (CurrentProfile == null || CurrentInstallations == null) return;
+            if (CurrentInstallations.Any(x => x.InstallationUUID == installation.InstallationUUID))
+            {
+                int oldIndex = CurrentInstallations.FindIndex(x => x.InstallationUUID == installation.InstallationUUID);
+                int count = CurrentInstallations.Count() - 1;
+                int newIndex = oldIndex + (moveUp ? -1 : 1);
+                if (newIndex >= 0 && newIndex <= count) CurrentInstallations.Move(oldIndex, newIndex);
+                Save();
+            }
+        }
+
+        public void Installation_MoveDown(BLInstallation installation) => Installation_Move(installation, false);
+
+        public void Installation_MoveUp(BLInstallation installation) => Installation_Move(installation, true);
+
+        public void Installation_Clone(BLInstallation installation)
+        {
+            if (CurrentProfile == null || CurrentInstallations == null) return;
+            if (CurrentInstallations.Any(x => x.InstallationUUID == installation.InstallationUUID))
+            {
+                string newName = installation.DisplayName;
+                int i = 1;
+
+                while (CurrentInstallations.Any(x => x.DisplayName == newName))
+                {
+                    newName = $"{installation.DisplayName} ({i})";
+                    i++;
+                }
+                var Clone = installation.Clone(newName);
+                Clone.DirectoryName = ValidatePathName(newName);
+                Clone.ReadOnly = false;
+                Installation_Add(Clone);
+            }
+        }
+        public void Installation_Create(string name, MCVersion version, string directory, string iconPath = null, bool isCustom = false)
+        {
+            if (CurrentProfile == null || CurrentInstallations == null) return;
+            if (string.IsNullOrEmpty(name) || name == BedrockLauncher.Localization.Language.LanguageManager.GetResource("VersionEntries_UnnamedInstallation")) name = Guid.NewGuid().ToString();
+            GetVersionParams(version, out VersioningMode versioningMode, out string version_uuid);
+
+            string DirName = ValidatePathName(name);
+            string profilePath = MainDataModel.Default.FilePaths.GetProfilePath(Properties.LauncherSettings.Default.CurrentProfileUUID);
+            if (!Directory.Exists(Path.Combine(profilePath, DirName))) Directory.CreateDirectory(Path.Combine(profilePath, DirName));
+
+            BLInstallation new_installation = new BLInstallation()
+            {
+                DisplayName = name,
+                IconPath = iconPath ?? Constants.INSTALLATIONS_FALLBACK_ICONPATH,
+                IsCustomIcon = isCustom,
+                DirectoryName = DirName,
+                VersioningMode = versioningMode,
+                VersionUUID = version_uuid
+            };
+
+            Installation_Add(new_installation);
+        }
+        public void Installation_Edit(string uuid, string name, MCVersion version, string directory, string iconPath = null, bool isCustom = false)
+        {
+            try
+            {
+                if (CurrentProfile == null || CurrentInstallations == null) return;
+                int index = CurrentInstallations.FindIndex(x => x.InstallationUUID == uuid);
+                if (index < 0) return;
+
+                BLInstallation old_installation = CurrentInstallations[index];
+                GetVersionParams(version, out VersioningMode versioningMode, out string version_uuid);
+                BLInstallation new_installation = new BLInstallation()
+                {
+                    DisplayName = name,
+                    IconPath = iconPath ?? Constants.INSTALLATIONS_FALLBACK_ICONPATH,
+                    IsCustomIcon = isCustom,
+                    DirectoryName = ValidatePathName(name),
+                    VersioningMode = versioningMode,
+                    VersionUUID = version_uuid,
+                    // Editing keeps the same installation: selection and last-played date stay valid.
+                    InstallationUUID = old_installation.InstallationUUID,
+                    LastPlayed = old_installation.LastPlayed
+                };
+
+                CurrentInstallations[index] = new_installation;
+                Save();
+
+                //We need to move data to new directory
+                MoveInstallationDirectory(old_installation.DirectoryName_Full, new_installation.DirectoryName_Full);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine(ex);
+            }
+        }
+
+        /// <summary>
+        /// Renames an installation's folder (validated directory names, not display names). An installation that was
+        /// never played may have no folder yet, and the target may already exist; neither case throws.
+        /// </summary>
+        private static void MoveInstallationDirectory(string oldDirectoryName, string newDirectoryName)
+        {
+            if (string.Equals(oldDirectoryName, newDirectoryName, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            string profilePath = MainDataModel.Default.FilePaths.GetProfilePath(Properties.LauncherSettings.Default.CurrentProfileUUID);
+            if (string.IsNullOrEmpty(profilePath))
+                return;
+
+            string oldDirectory = Path.Combine(profilePath, oldDirectoryName);
+            string newDirectory = Path.Combine(profilePath, newDirectoryName);
+
+            if (Directory.Exists(newDirectory))
+            {
+                Trace.WriteLine($"Installation folder {newDirectory} already exists; {oldDirectory} was left in place.");
+                return;
+            }
+
+            if (Directory.Exists(oldDirectory))
+                Directory.Move(oldDirectory, newDirectory);
+            else
+                Directory.CreateDirectory(newDirectory);
+        }
+
+        public void Installation_Delete(BLInstallation installation, bool deleteData = true)
+        {
+            if (CurrentProfile == null || CurrentInstallations == null) return;
+            if (deleteData)
+            {
+                try { installation.DeleteUserData(); }
+                catch (Exception ex) { MainDataModel.Default.UiHost?.ShowException(ex); }
+            }
+            CurrentInstallations.Remove(installation);
+            Save();
+        }
+        public void Installation_UpdateLP(BLInstallation installation)
+        {
+            if (installation == null) return;
+            installation.LastPlayed = DateTime.Now;
+            Save();
+        }
+
+        #endregion
+
+        #region Extensions
+
+        public static void GetVersionParams(MCVersion version, out VersioningMode versioningMode, out string version_id)
+        {
+            version_id = Constants.LATEST_RELEASE_UUID;
+            versioningMode = VersioningMode.LatestRelease;
+
+            if (version != null)
+            {
+                //if (version.UUID == Constants.LATEST_BETA_UUID) versioningMode = VersioningMode.LatestBeta;
+                if (version.UUID == Constants.LATEST_RELEASE_UUID) versioningMode = VersioningMode.LatestRelease;
+                else if (version.UUID == Constants.LATEST_PREVIEW_UUID) versioningMode = VersioningMode.LatestPreview;
+                else versioningMode = VersioningMode.None;
+
+                version_id = version.UUID;
+            }
+        }
+
+
+        #endregion
+    }
+
+}
+﻿
