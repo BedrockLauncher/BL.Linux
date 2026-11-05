@@ -15,7 +15,7 @@
     <ProjectReference Include="..\BedrockLauncher.UpdateProcessor\BedrockLauncher.UpdateProcessor.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Localization\lang\*.xaml" LogicalName="lang.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Localization\lang\*.xaml" LogicalName="lang.%(Filename)%(Extension)" WithCulture="false" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="BedrockLauncher.Linux.Tests" />

@@ -92,7 +92,10 @@ namespace BedrockLauncher.Localization.Language
             }
 
             var merged = new Dictionary<string, string>(fallback);
+            foreach (var pair in LinuxStrings.Tables[DefaultLocale]) merged[pair.Key] = pair.Value;
             foreach (var pair in table) merged[pair.Key] = pair.Value;
+            if (LinuxStrings.Tables.TryGetValue(locale, out var linux))
+                foreach (var pair in linux) merged[pair.Key] = pair.Value;
 
             current = merged;
             CurrentLocale = locale;
@@ -103,7 +106,8 @@ namespace BedrockLauncher.Localization.Language
         {
             if (current.TryGetValue(key, out string value)) return value;
             fallback ??= LoadInternal(DefaultLocale) ?? new Dictionary<string, string>();
-            return fallback.TryGetValue(key, out value) ? value : key;
+            if (fallback.TryGetValue(key, out value)) return value;
+            return LinuxStrings.Tables[DefaultLocale].TryGetValue(key, out value) ? value : key;
         }
 
         public static bool TryGetResource(string key, out string value)
