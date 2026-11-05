@@ -28,6 +28,8 @@ namespace BedrockLauncher
         Task ShowMessage(string title, string message);
         /// <summary>Asks for a folder (null when cancelled).</summary>
         Task<string> PickFolder(string title);
+        /// <summary>Asks for a file (null when cancelled); filters are (name, glob patterns).</summary>
+        Task<string> PickFile(string title, params (string Name, string[] Patterns)[] filters);
         void CloseLauncher();
     }
 }
