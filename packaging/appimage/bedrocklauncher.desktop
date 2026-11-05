@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Minecraft Bedrock Launcher
+GenericName=Minecraft Bedrock Launcher
+Comment=Unofficial Minecraft Bedrock launcher: profiles, installations and versions
+Exec=BedrockLauncher %U
+Icon=bedrocklauncher
+Terminal=false
+Categories=Game;
+Keywords=minecraft;bedrock;launcher;
+StartupWMClass=BedrockLauncher
