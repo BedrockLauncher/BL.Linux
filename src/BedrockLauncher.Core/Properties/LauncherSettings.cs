@@ -104,13 +104,26 @@ namespace BedrockLauncher.Properties
 
         #endregion
 
+        #region Account
+
+        /// <summary>Application (client) ID of the launcher's Azure app registration, used for Microsoft sign-in.</summary>
+        public string MicrosoftClientId { get; set; } = "";
+
+        /// <summary>xodus-cli binary; empty = runtimes/xodus/xodus-cli or PATH.</summary>
+        public string XodusPath { get; set; } = "";
+
+        /// <summary>Set after "xodus-cli login" succeeded (Xodus keeps its own credentials in the keyring).</summary>
+        public bool XodusSignedIn { get; set; } = false;
+
+        #endregion
+
         #region Linux runtime settings
 
         /// <summary>wine-uwp install folder (holds bin/wine); empty = auto-detect.</summary>
         public string UwpRuntimePath { get; set; } = "";
 
         /// <summary>Runtime that runs GDK builds.</summary>
-        public GameRuntimeKind GdkRuntimeKind { get; set; } = GameRuntimeKind.GdkProton;
+        public GameRuntimeKind GdkRuntimeKind { get; set; } = GameRuntimeKind.WineGdk;
 
         /// <summary>GDK-Proton folder (holds the 'proton' script) or WineGDK install folder; empty = auto-detect.</summary>
         public string GdkRuntimePath { get; set; } = "";

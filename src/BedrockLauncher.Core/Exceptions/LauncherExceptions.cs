@@ -28,6 +28,11 @@ namespace BedrockLauncher.Exceptions
         public GdkFilesRequiredException(string message) : base(message) { }
     }
 
+    public class AccountRequiredException : PackageManagerException
+    {
+        public AccountRequiredException(string message) : base(message) { }
+    }
+
     public class AppLaunchFailedException : PackageManagerException
     {
         public AppLaunchFailedException(Exception inner) : base("Minecraft could not be started: " + inner.Message, inner) { }
