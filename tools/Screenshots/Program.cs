@@ -72,6 +72,8 @@ public static class Screenshots
         Shot("08-settings-versions");
         settings.NavigateToLinux();
         Shot("09-settings-linux");
+        settings.NavigateToAccounts();
+        Shot("09b-settings-accounts");
         settings.Navigate(settings.FindControl<Avalonia.Controls.Primitives.ToggleButton>("AboutButton"));
         Shot("10-settings-about");
 
