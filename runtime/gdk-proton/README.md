@@ -1,8 +1,13 @@
 # GDK builds (1.21.120 and later)
 
-Since 1.21.120 the Windows edition of Minecraft is a GDK game. Its packages (`.msixvc`) are encrypted and only Gaming
-Services on Windows can install them, so **Linux cannot install a GDK version from the download**. What runs on Linux
-is an already installed game folder:
+Since 1.21.120 the Windows edition of Minecraft is a GDK game. Its packages (`.msixvc`) are encrypted.
+
+**With [Xodus](https://github.com/xodus-gaming/xodus)** (`runtime/xodus/build.sh`, then Settings > Accounts > Sign in to
+Xodus) the launcher downloads the version from the catalog (`xodus-cli streaming <url> <folder>`) and starts it with
+`xodus-cli run <folder> <WineGDK wine>`, which gets the license from your Xbox account and decrypts the executable in
+memory. The account must own Minecraft.
+
+**Without Xodus** the game folder has to come from a Windows install:
 
 1. On Windows (or in a Windows VM) install the version with the Xbox app or with BedrockLauncher.
 2. Copy the game folder from inside the package context, where Windows serves the files decrypted (PowerShell's
@@ -15,8 +20,8 @@ The game then runs with a GDK runtime:
 
 | Runtime | Install | Notes |
 | --- | --- | --- |
-| [GDK-Proton](https://github.com/Weather-OS/GDK-Proton) (default) | `./install.sh` | GE-Proton built with WineGDK. Extracted to `~/.steam/root/compatibilitytools.d`, also usable from Steam. |
-| [WineGDK](https://github.com/Weather-OS/WineGDK) | build it, set its folder in Settings > Linux | Plain Wine with GDK support; community reports say it runs 1.26.x where GDK-Proton does not. |
+| [WineGDK](https://github.com/Weather-OS/WineGDK) (default) | `../winegdk/build.sh` | Wine with the GDK runtime (xgameruntime, GameInput, Xodus interop); the script adds DXVK + vkd3d-proton. |
+| [GDK-Proton](https://github.com/Weather-OS/GDK-Proton) | `./install.sh`, then Settings > Linux > GDK-Proton | GE-Proton built with WineGDK, also usable from Steam. |
 
 Each installation keeps its own data: inside the prefix `%APPDATA%\Minecraft Bedrock` (Preview: `Minecraft Bedrock
 Preview`) is a symlink to the installation's `packageData` folder; existing data is kept as `.default`.
