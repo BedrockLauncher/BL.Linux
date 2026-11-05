@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="BedrockLauncher.Pages.Common.DialogPrompt"
+             Background="#BF000000">
+    <Grid>
+        <Border CornerRadius="2" Background="#FF262626" Width="600" Height="258" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 0 6 0 #F2000000">
+            <Grid>
+                <TextBlock x:Name="DialogTitle" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="White" FontSize="24" Margin="0,20,0,0" FontWeight="Bold"/>
+                <TextBlock x:Name="DialogText" HorizontalAlignment="Center" TextAlignment="Center" VerticalAlignment="Top" Foreground="White" FontSize="14" Margin="28.5,70,28.5,0" TextWrapping="Wrap"/>
+                <Border Background="#FF313131" Height="1" VerticalAlignment="Top" Margin="0,185,0,0"/>
+                <CheckBox x:Name="DialogOptionalCheckbox" Margin="20,185,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" IsVisible="False">
+                    <TextBlock x:Name="DialogOptional" Foreground="White" FontSize="12"/>
+                </CheckBox>
+                <StackPanel Margin="0,185,20,0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button x:Name="YesButton" Click="YesButton_Click" Content="{DynamicResource GeneralText_Yes}" Height="32" Theme="{StaticResource DialogButton_Green}"/>
+                    <Button x:Name="NoButton" Click="NoButton_Click" Content="{DynamicResource GeneralText_No}" Height="32" Theme="{StaticResource DialogButton_Red}"/>
+                    <Button x:Name="CancelButton" Click="CancelButton_Click" Content="{DynamicResource GeneralText_Cancel}" Height="32" Theme="{StaticResource DialogButton}" IsVisible="False"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

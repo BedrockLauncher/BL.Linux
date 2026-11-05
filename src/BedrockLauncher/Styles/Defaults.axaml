@@ -1,0 +1,179 @@
+<!-- Implicit styles of upstream (textblock.xaml, misc.xaml, checkbox.xaml, contextmenu.xaml, listview.xaml, scrollbars.xaml). -->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style Selector="Window">
+        <Setter Property="FontFamily" Value="{StaticResource NotoSans}"/>
+    </Style>
+    <Style Selector="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource NotoSans}"/>
+    </Style>
+    <Style Selector="TextBlock.HeaderTextblock">
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryText.Foreground}"/>
+    </Style>
+    <Style Selector="TextBlock.CommonTextblock">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryText.Foreground}"/>
+    </Style>
+    <Style Selector="TextBlock.TabTitle">
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryText.Foreground}"/>
+    </Style>
+    <Style Selector="TextBlock.SectionTitle">
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Margin" Value="0,0,0,4"/>
+    </Style>
+    <Style Selector="TextBlock.Secondary">
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryText.Foreground}"/>
+    </Style>
+
+    <!-- play_button.xaml: BigGreenButton_Text -->
+    <Style Selector="TextBlock.BigGreenButton_Text">
+        <Setter Property="Margin" Value="0,-4,0,0"/>
+        <Setter Property="FontFamily" Value="{StaticResource MinecraftTen}"/>
+        <Setter Property="FontSize" Value="26"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="TextTrimming" Value="WordEllipsis"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+        <Setter Property="Effect">
+            <DropShadowEffect BlurRadius="0" OffsetX="0" OffsetY="2" Opacity="0.43"/>
+        </Setter>
+    </Style>
+
+    <!-- Separator (misc.xaml) -->
+    <Style Selector="Separator">
+        <Setter Property="Background" Value="{DynamicResource Seperator.Background}"/>
+        <Setter Property="MinWidth" Value="1"/>
+        <Setter Property="MinHeight" Value="1"/>
+        <Setter Property="Margin" Value="0"/>
+        <Setter Property="Height" Value="1"/>
+    </Style>
+    <Style Selector="Separator.Vertical">
+        <Setter Property="Height" Value="NaN"/>
+        <Setter Property="Width" Value="1"/>
+    </Style>
+
+    <Style Selector="Panel.Disableable:disabled, Grid.Disableable:disabled">
+        <Setter Property="Opacity" Value="0.25"/>
+    </Style>
+
+    <!-- CheckBox (checkbox.xaml): square mark, Minecraft green when checked -->
+    <Style Selector="CheckBox">
+        <Setter Property="Foreground" Value="#FFCCCCCC"/>
+        <Setter Property="FontSize" Value="14"/>
+    </Style>
+    <Style Selector="CheckBox /template/ Border#NormalRectangle">
+        <Setter Property="CornerRadius" Value="0"/>
+        <Setter Property="Background" Value="{DynamicResource OptionMark.Static.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource OptionMark.Static.Border}"/>
+    </Style>
+    <Style Selector="CheckBox:pointerover /template/ Border#NormalRectangle">
+        <Setter Property="Background" Value="{DynamicResource OptionMark.MouseOver.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource OptionMark.MouseOver.Border}"/>
+    </Style>
+    <Style Selector="CheckBox:checked /template/ Border#NormalRectangle">
+        <Setter Property="Background" Value="{DynamicResource OptionMark.Static.Checked.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource OptionMark.Static.Checked.Border}"/>
+    </Style>
+    <Style Selector="CheckBox:checked:pointerover /template/ Border#NormalRectangle">
+        <Setter Property="Background" Value="{DynamicResource OptionMark.MouseOver.Checked.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource OptionMark.MouseOver.Checked.Border}"/>
+    </Style>
+    <Style Selector="CheckBox:checked /template/ ContentPresenter#ContentPresenter, CheckBox:pointerover /template/ ContentPresenter#ContentPresenter">
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <!-- Context menus (contextmenu.xaml, menuitems.xaml) -->
+    <Style Selector="ContextMenu">
+        <Setter Property="Background" Value="{DynamicResource ContentMenu.Static.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ContentMenu.Static.BorderBrush}"/>
+        <Setter Property="CornerRadius" Value="0"/>
+        <Setter Property="Padding" Value="0,4"/>
+    </Style>
+    <Style Selector="MenuItem">
+        <Setter Property="Foreground" Value="{DynamicResource ContentMenu.Static.Foreground}"/>
+        <Setter Property="FontFamily" Value="{StaticResource NotoSans}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Padding" Value="13,6"/>
+        <Setter Property="CornerRadius" Value="0"/>
+    </Style>
+    <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot">
+        <Setter Property="Background" Value="{DynamicResource ContextMenu.Selected.Background}"/>
+    </Style>
+    <Style Selector="MenuItem.Danger">
+        <Setter Property="Foreground" Value="Red"/>
+    </Style>
+
+    <!-- List boxes (listview.xaml) -->
+    <Style Selector="ListBox">
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+    <Style Selector="ListBoxItem">
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    </Style>
+    <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ListViewItem.MouseOver.BackgroundBrush}"/>
+    </Style>
+    <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter, ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ListViewItem.MouseOver.BackgroundBrush}"/>
+    </Style>
+
+    <!-- ComboBox items (combobox.xaml): Minecraft green highlight -->
+    <Style Selector="ComboBoxItem">
+        <Setter Property="CornerRadius" Value="0"/>
+    </Style>
+    <Style Selector="ComboBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter, ComboBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ComboBoxItem.Selected.Background}"/>
+    </Style>
+    <Style Selector="ComboBox /template/ Border#PopupBorder">
+        <Setter Property="Background" Value="{DynamicResource ComboBox.Dropdown.Static.Background}"/>
+        <Setter Property="CornerRadius" Value="0"/>
+    </Style>
+
+    <!-- Text boxes (textbox.xaml) -->
+    <Style Selector="TextBox">
+        <Setter Property="CornerRadius" Value="0"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBox.Static.Foreground}"/>
+        <Setter Property="Background" Value="{DynamicResource TextBox.Static.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource TextBox.Static.Border}"/>
+        <Setter Property="SelectionBrush" Value="{DynamicResource TextBox.SelectionBrush}"/>
+        <Setter Property="FontFamily" Value="{StaticResource NotoSans}"/>
+    </Style>
+    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource TextBox.MouseOver.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource TextBox.MouseOver.Border}"/>
+    </Style>
+    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource TextBox.Focus.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource TextBox.Focus.Border}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+
+    <!-- Progress bars: flat, Minecraft green on black -->
+    <Style Selector="ProgressBar">
+        <Setter Property="Foreground" Value="#FF008542"/>
+        <Setter Property="Background" Value="Black"/>
+        <Setter Property="CornerRadius" Value="0"/>
+        <Setter Property="MinHeight" Value="0"/>
+    </Style>
+
+    <!-- Thin scroll bars (scrollbars.xaml: 8px) -->
+    <Style Selector="ScrollBar:vertical">
+        <Setter Property="Width" Value="8"/>
+    </Style>
+    <Style Selector="ScrollBar:horizontal">
+        <Setter Property="Height" Value="8"/>
+    </Style>
+
+    <Style Selector="ToolTip">
+        <Setter Property="Background" Value="#FF131313"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderBrush" Value="#FF5C5C5C"/>
+        <Setter Property="CornerRadius" Value="0"/>
+    </Style>
+</Styles>

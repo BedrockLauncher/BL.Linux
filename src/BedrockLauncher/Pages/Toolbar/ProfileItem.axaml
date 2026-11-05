@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="using:BedrockLauncher.Classes"
+             xmlns:ui="using:BedrockLauncher.UI"
+             x:Class="BedrockLauncher.Pages.Toolbar.ProfileItem"
+             x:DataType="c:BLProfile"
+             Height="45" Width="179">
+    <Panel>
+        <ToggleButton x:Name="SourceButton" Click="SourceButton_Click" Theme="{StaticResource ProfileSelectorStyle}" FontSize="14"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center">
+            <Grid Margin="38,0,0,0" ColumnDefinitions="*,20">
+                <StackPanel Margin="15,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}" FontWeight="Normal" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{DynamicResource ToolbarButtons_ProfileButton_ProfileType_Text}" FontSize="12" Foreground="{DynamicResource SecondaryText.Foreground}"/>
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="✔" VerticalAlignment="Center" x:Name="SelectedMark" IsVisible="False"/>
+            </Grid>
+        </ToggleButton>
+        <Border CornerRadius="15" IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Height="30" Margin="5,0,0,0" ClipToBounds="True">
+            <Image Source="{Binding ImagePath, Converter={x:Static ui:Conv.Image}}" Stretch="Fill"/>
+        </Border>
+    </Panel>
+</UserControl>

@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="BedrockLauncher.Pages.Common.ErrorScreen"
+             Background="#BF000000">
+    <Grid>
+        <Border CornerRadius="2" Background="#FF262626" Width="600" MinHeight="258" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 0 6 0 #F2000000">
+            <Grid RowDefinitions="*,63">
+                <StackPanel>
+                    <TextBlock x:Name="ErrorTitle" HorizontalAlignment="Center" Text="{DynamicResource ErrorScreen_Title}" Foreground="White" FontSize="14" Margin="0,20,0,0"/>
+                    <TextBlock x:Name="ErrorType" HorizontalAlignment="Center" Text="{DynamicResource ErrorScreen_SubTitle}" Foreground="White" FontSize="24" Margin="0,10,0,0" FontWeight="Bold"/>
+                    <SelectableTextBlock x:Name="ErrorText" HorizontalAlignment="Center" TextAlignment="Center" Foreground="White" FontSize="14" Margin="28.5,7,28.5,10" TextWrapping="Wrap"/>
+                    <TextBox x:Name="ErrorStackTrace" Margin="28.5,0,28.5,10" IsVisible="False" Height="150" TextWrapping="Wrap" AcceptsReturn="True" IsReadOnly="True" FontFamily="monospace" FontSize="11"/>
+                </StackPanel>
+                <StackPanel Grid.Row="1" VerticalAlignment="Bottom">
+                    <Border Background="#FF313131" Height="1" Margin="0,0,0,12"/>
+                    <StackPanel Margin="0,0,0,10" Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button x:Name="ErrorScreenCloseButton" Click="ErrorScreenCloseButton_Click" Content="{DynamicResource ErrorScreen_CloseButton}" Height="32" Theme="{StaticResource DialogButton}"/>
+                        <Button x:Name="ErrorScreenViewCrashButton" Click="ErrorScreenViewCrashButton_Click" Content="{DynamicResource ErrorScreen_ViewCrash}" Height="32" Theme="{StaticResource DialogButton}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

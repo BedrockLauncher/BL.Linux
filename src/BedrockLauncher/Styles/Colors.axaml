@@ -294,7 +294,7 @@
     <SolidColorBrush x:Key="ButtonSide.MouseOver.BackgroundBrush" Color="#FF353535"/>
     <x:Double x:Key="MaxLogoHeight">100</x:Double>
     <FontFamily x:Key="NotoSans">avares://BedrockLauncher/Resources/fonts/NotoSans#Noto Sans</FontFamily>
-    <FontFamily x:Key="MinecraftTen">avares://BedrockLauncher/Resources/fonts/MinecraftTen.ttf#Minecraft Ten</FontFamily>
-    <FontFamily x:Key="MinecraftSeven">avares://BedrockLauncher/Resources/fonts/MinecraftSeven.ttf#Minecraft Seven</FontFamily>
-    <FontFamily x:Key="MinecraftFive">avares://BedrockLauncher/Resources/fonts/MinecraftFive-Regular.ttf#Minecraft Five</FontFamily>
+    <FontFamily x:Key="MinecraftTen">avares://BedrockLauncher/Resources/fonts/MinecraftTen.ttf#Minecraft</FontFamily>
+    <FontFamily x:Key="MinecraftSeven">avares://BedrockLauncher/Resources/fonts/MinecraftSeven.ttf#Minecraft</FontFamily>
+    <FontFamily x:Key="MinecraftFive">avares://BedrockLauncher/Resources/fonts/MinecraftFive-Regular.ttf#Minecraft</FontFamily>
 </ResourceDictionary>

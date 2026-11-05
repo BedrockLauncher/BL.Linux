@@ -1,0 +1,19 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:pages="using:BedrockLauncher.Pages"
+        xmlns:vm="using:BedrockLauncher.ViewModels"
+        x:Class="BedrockLauncher.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="{DynamicResource MainWindow_Title}"
+        Icon="avares://BedrockLauncher/Resources/images/icons/launcher_icon.ico"
+        Width="1016" Height="700" MinWidth="1016" MinHeight="700"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource Background.Primary}">
+    <Panel>
+        <pages:MainPage x:Name="MainPage" IsEnabled="{Binding MainFrame_isEnabled}"/>
+        <ContentControl x:Name="OverlayFrame" Content="{Binding OverlayFrame_Content}" IsEnabled="{Binding OverlayFrame_isEnabled}"
+                        IsVisible="{Binding OverlayFrame_Content, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+        <ContentControl x:Name="ErrorFrame" Content="{Binding ErrorFrame_Content}"
+                        IsVisible="{Binding ErrorFrame_Content, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+    </Panel>
+</Window>

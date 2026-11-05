@@ -1,0 +1,9 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="BedrockLauncher.Pages.General.ResultPanel"
+             Background="#FF323232">
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+        <TextBlock x:Name="Text1" Foreground="{DynamicResource PrimaryText.Foreground}" TextAlignment="Center" Margin="0,0,0,10" FontSize="26" FontWeight="SemiBold"/>
+        <TextBlock x:Name="Text2" Foreground="{DynamicResource PrimaryText.Foreground}" TextAlignment="Center"/>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,94 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BedrockLauncher.ViewModels"
+             xmlns:ui="using:BedrockLauncher.UI"
+             x:Class="BedrockLauncher.Pages.MainPage"
+             x:DataType="vm:MainDataModel">
+    <Grid ColumnDefinitions="180,*">
+        <!-- Sidebar (Toolbar_*Button.xaml) -->
+        <StackPanel Grid.Column="0" Background="{DynamicResource Background.Primary}" HorizontalAlignment="Left" Width="180">
+            <!-- Profile -->
+            <Panel Height="59" Margin="1,0,0,0" VerticalAlignment="Top" IsEnabled="{Binding ProgressBarState.AllowEditing}" Classes="Disableable">
+                <ToggleButton x:Name="ProfileButton" Theme="{StaticResource SideBarButtonStyle}" Click="ProfileButton_Click" IsChecked="False"
+                              Padding="55,1,1,1" Width="179" VerticalAlignment="Stretch" FontWeight="Normal">
+                    <Grid Margin="5,0,0,0">
+                        <TextBlock Text="{Binding Config.CurrentProfile.Name, FallbackValue='Default Profile'}" FontWeight="Normal" VerticalAlignment="Top" TextTrimming="CharacterEllipsis" Padding="0,0,0,3"/>
+                        <TextBlock Margin="0,16,0,0" Foreground="#FF929292" Text="{DynamicResource ToolbarButtons_ProfileButton_ProfileType_Text}" FontWeight="Normal" FontSize="12"/>
+                    </Grid>
+                    <ToggleButton.ContextMenu>
+                        <ContextMenu x:Name="ProfileContextMenu" Placement="RightEdgeAlignedTop">
+                            <MenuItem x:Name="AddProfileButton" Header="{DynamicResource ProfileButton_AddProfile_Text}" Click="AddProfileButton_Click"/>
+                            <MenuItem x:Name="EditProfileButton" Header="{DynamicResource ProfileButton_ProfileSettings_Text}" Click="EditProfileButton_Click"/>
+                            <MenuItem x:Name="RemoveProfileButton" Header="{DynamicResource ProfileButton_RemoveProfile_Text}" Classes="Danger" Click="RemoveProfileButton_Click"/>
+                            <MenuItem x:Name="OtherAccountsHeader" IsEnabled="False">
+                                <MenuItem.Header>
+                                    <TextBlock Margin="0,18,0,0" Foreground="#FF929292" Text="{DynamicResource ProfileButton_ChooseAccount_Text}" Classes="HeaderTextblock"/>
+                                </MenuItem.Header>
+                            </MenuItem>
+                            <Separator x:Name="OtherAccountsSeperator"/>
+                        </ContextMenu>
+                    </ToggleButton.ContextMenu>
+                </ToggleButton>
+                <Border CornerRadius="15" IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Center" Width="30" Height="30" Margin="14,0,0,3" ClipToBounds="True">
+                    <Image Source="{Binding Config.CurrentProfileImagePath, Converter={x:Static ui:Conv.Image}}" Stretch="Fill"/>
+                </Border>
+            </Panel>
+            <!-- News -->
+            <Panel Height="59" Margin="1,0,0,0" VerticalAlignment="Top">
+                <ToggleButton x:Name="NewsButton" Theme="{StaticResource SideBarButtonStyle}" Click="NewsButton_Click" ToolTip.Tip="{DynamicResource ToolbarButtons_NewsButton_Text}">
+                    <TextBlock Text="{DynamicResource ToolbarButtons_NewsButton_Text}" VerticalAlignment="Top" TextWrapping="Wrap" Padding="1,0,0,3"/>
+                </ToggleButton>
+                <Image Theme="{StaticResource SideBarButtonIcon}" Source="avares://BedrockLauncher/Resources/images/icons/news_icon.png"/>
+            </Panel>
+            <!-- Bedrock Edition -->
+            <Panel Height="59" Margin="1,0,0,0" VerticalAlignment="Top">
+                <ToggleButton x:Name="BedrockEditionButton" Theme="{StaticResource SideBarButtonStyle}" Click="BedrockEditionButton_Click" ToolTip.Tip="{DynamicResource ToolbarButtons_MinecraftEdition_Text}">
+                    <StackPanel VerticalAlignment="Top" Margin="1,0,0,5">
+                        <TextBlock FontSize="11" Text="{DynamicResource ToolbarButtons_Minecraft_Text}" LineHeight="17"/>
+                        <TextBlock FontSize="14" Text="{DynamicResource ToolbarButtons_MinecraftEdition_Text}" LineHeight="17"/>
+                    </StackPanel>
+                </ToggleButton>
+                <Image Theme="{StaticResource SideBarButtonIcon}" Source="avares://BedrockLauncher/Resources/images/icons/bedrock_grass_icon.png"/>
+                <ProgressBar Height="5" VerticalAlignment="Bottom" IsVisible="{Binding ProgressBarState.Show}"
+                             IsIndeterminate="{Binding ProgressBarState.IsIndeterminate}" Value="{Binding ProgressBarState.CurrentProgress}" Maximum="100" MinWidth="0"/>
+            </Panel>
+        </StackPanel>
+        <!-- Settings (bottom of the sidebar) -->
+        <Panel Grid.Column="0" Height="59" Margin="1,0,0,0" VerticalAlignment="Bottom">
+            <ToggleButton x:Name="SettingsButton" Theme="{StaticResource SideBarButtonStyle}" Click="SettingsButton_Click" ToolTip.Tip="{DynamicResource ToolbarButtons_SettingsButton_Text}">
+                <TextBlock Text="{DynamicResource ToolbarButtons_SettingsButton_Text}" VerticalAlignment="Top" TextWrapping="Wrap" Padding="1,0,0,3"/>
+            </ToggleButton>
+            <Image Theme="{StaticResource SideBarButtonIcon}" Source="avares://BedrockLauncher/Resources/images/icons/settings_icon.png"/>
+        </Panel>
+
+        <Grid Grid.Column="1" RowDefinitions="*,Auto">
+            <Panel Background="{DynamicResource Background.Tertiary}"/>
+            <ContentControl x:Name="MainWindowFrame"/>
+            <!-- Progress bar -->
+            <Grid Grid.Row="1" x:Name="ProgressBarGrid" Background="{DynamicResource Background.Primary}" IsVisible="{Binding ProgressBarState.Show}">
+                <Grid Margin="10,8,10,22" ColumnDefinitions="*,Auto">
+                    <ProgressBar Height="32" IsIndeterminate="{Binding ProgressBarState.IsIndeterminate}" Value="{Binding ProgressBarState.CurrentProgress}" Maximum="100"/>
+                    <StackPanel Orientation="Horizontal" Height="32" Margin="26,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <StackPanel.Styles>
+                            <Style Selector="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Style>
+                        </StackPanel.Styles>
+                        <TextBlock Text="{Binding ProgressBarState.Description}"/>
+                        <TextBlock Text=" : " IsVisible="{Binding ProgressBarState.ShowTextualProgress}"/>
+                        <TextBlock Text="{Binding ProgressBarState.TextualProgress}" IsVisible="{Binding ProgressBarState.ShowTextualProgress}"/>
+                        <TextBlock Text=" : [" IsVisible="{Binding ProgressBarState.ShowInformation}"/>
+                        <TextBlock Text="{Binding ProgressBarState.Information}" IsVisible="{Binding ProgressBarState.ShowInformation}"/>
+                        <TextBlock Text="]" IsVisible="{Binding ProgressBarState.ShowInformation}"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Height="32" Width="32" Padding="0" Margin="4,0,0,0" Theme="{StaticResource DialogButton}" x:Name="CancelButton"
+                            Click="CancelButton_Click" IsEnabled="{Binding ProgressBarState.AllowCancel}">
+                        <Path Data="M0,0 L10,10 M0,10 L10,0" Stroke="White" StrokeThickness="1.5" Width="10" Height="10"/>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>
