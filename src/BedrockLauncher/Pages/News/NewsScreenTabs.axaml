@@ -1,0 +1,82 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="using:BedrockLauncher.Classes.Launcher"
+             xmlns:d="using:BedrockLauncher.Downloaders"
+             xmlns:ui="using:BedrockLauncher.UI"
+             xmlns:g="using:BedrockLauncher.Pages.General"
+             x:Class="BedrockLauncher.Pages.News.NewsScreenTabs"
+             Background="{DynamicResource Background.Secondary}">
+    <Grid RowDefinitions="120,1,*,30" ClipToBounds="True">
+        <!-- Header: stone texture + logo -->
+        <Panel Height="65" VerticalAlignment="Top">
+            <Panel.Background>
+                <ImageBrush Source="avares://BedrockLauncher/Resources/images/bg/stone_texture.png" TileMode="Tile" DestinationRect="0,0,800,400" Stretch="None"/>
+            </Panel.Background>
+        </Panel>
+        <Image Margin="0,15,0,0" Height="68" VerticalAlignment="Top" Source="avares://BedrockLauncher/Resources/images/logo/logo.png"/>
+        <StackPanel HorizontalAlignment="Left" Height="35" VerticalAlignment="Bottom" Orientation="Horizontal">
+            <ToggleButton x:Name="OfficialTab" Click="Tab_Click" Content="{DynamicResource NewsScreen_OfficialTabTitle}" Theme="{StaticResource ToolbarButton}" IsChecked="True"/>
+            <ToggleButton x:Name="ForumsTab" Click="Tab_Click" Content="{DynamicResource NewsScreen_MinecraftForumsTitle}" Theme="{StaticResource ToolbarButton}"/>
+        </StackPanel>
+        <Separator Grid.Row="1" Margin="0"/>
+
+        <!-- Official news (OfficalNewsPage / FeedItem_Offical) -->
+        <ScrollViewer Grid.Row="2" x:Name="OfficialView" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl x:Name="OfficialList" Margin="30,10">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><WrapPanel HorizontalAlignment="Center"/></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="c:News_OfficialItem">
+                        <Button Theme="{StaticResource EmptyButton}" Click="OfficialItem_Click" Margin="8" Classes="Card">
+                            <Border Background="{DynamicResource MCNetFeedItem.Static.Background}" Width="250" Classes="CardBorder">
+                                <StackPanel>
+                                    <ui:WebImage Url="{Binding ImageUrl}" Fallback="avares://BedrockLauncher/Resources/images/packs/invalid_pack.png" Height="160" Stretch="UniformToFill"/>
+                                    <TextBlock Text="{Binding Tag}" Margin="10,8,10,0" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource SecondaryText.Foreground}"/>
+                                    <TextBlock Text="{Binding Title}" Margin="10,2,10,4" FontSize="16" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Date}" Margin="10,0,10,10" FontSize="11" Foreground="{DynamicResource TertiaryText.Foreground}"/>
+                                </StackPanel>
+                            </Border>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                <ItemsControl.Styles>
+                    <Style Selector="Button.Card:pointerover Border.CardBorder">
+                        <Setter Property="Background" Value="{DynamicResource MCNetFeedItem.Selected.Background}"/>
+                    </Style>
+                </ItemsControl.Styles>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Forums RSS (RSSNewsPage / FeedItem_RSS) -->
+        <ScrollViewer Grid.Row="2" x:Name="ForumsView" IsVisible="False" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl x:Name="ForumsList" Margin="30,10">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="d:RssItem">
+                        <Button Theme="{StaticResource EmptyButton}" Click="RssItem_Click" Margin="0,5" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Classes="Card">
+                            <Border Background="{DynamicResource MCNetFeedItem.Static.Background}" Padding="14,10" Classes="CardBorder">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Date}" FontSize="11" Foreground="{DynamicResource TertiaryText.Foreground}" Margin="0,2"/>
+                                    <TextBlock Text="{Binding Description}" FontSize="13" Foreground="{DynamicResource SecondaryText.Foreground}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                <ItemsControl.Styles>
+                    <Style Selector="Button.Card:pointerover Border.CardBorder">
+                        <Setter Property="Background" Value="{DynamicResource MCNetFeedItem.Selected.Background}"/>
+                    </Style>
+                </ItemsControl.Styles>
+            </ItemsControl>
+        </ScrollViewer>
+        <g:ResultPanel Grid.Row="2" x:Name="ResultPanel" PanelType="Loading" Background="Transparent"/>
+
+        <Border Grid.Row="3" BorderBrush="{DynamicResource Seperator.Background}" BorderThickness="0,1,0,0">
+            <Grid Background="#FF303030">
+                <Button Margin="0,0,10,0" FontSize="17" HorizontalAlignment="Right" VerticalAlignment="Center" Click="Refresh_Click" Content="{DynamicResource GeneralText_Refresh}" Theme="{StaticResource LinkButton}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
