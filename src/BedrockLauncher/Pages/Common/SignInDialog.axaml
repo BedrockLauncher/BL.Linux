@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:g="using:BedrockLauncher.Pages.General"
+             x:Class="BedrockLauncher.Pages.Common.SignInDialog"
+             Background="#BF000000">
+    <!-- Device code sign-in, same frame as DialogPrompt -->
+    <Border CornerRadius="2" Background="#FF262626" Width="600" MinHeight="300" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 0 6 0 #F2000000">
+        <Grid RowDefinitions="*,Auto">
+            <StackPanel Margin="28,20,28,10" Spacing="10">
+                <TextBlock HorizontalAlignment="Center" Text="{DynamicResource Linux_Account_CodeTitle}" Foreground="White" FontSize="24" FontWeight="Bold"/>
+                <TextBlock x:Name="Instructions" HorizontalAlignment="Center" TextAlignment="Center" Foreground="White" FontSize="14" TextWrapping="Wrap"/>
+                <SelectableTextBlock x:Name="CodeText" HorizontalAlignment="Center" Foreground="White" FontSize="34" FontFamily="monospace" FontWeight="Bold" LetterSpacing="4" Margin="0,6"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button x:Name="OpenBrowserButton" Content="{DynamicResource Linux_Account_OpenBrowser}" Theme="{StaticResource DialogButton_Green}" Click="OpenBrowser_Click" IsEnabled="False"/>
+                    <Button x:Name="CopyButton" Content="{DynamicResource Linux_Account_CopyCode}" Theme="{StaticResource DialogButton}" Click="Copy_Click" IsEnabled="False"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+                    <g:LoaderIcon Width="18" Height="18" x:Name="Spinner"/>
+                    <TextBlock x:Name="StatusText" Text="{DynamicResource Linux_Account_Waiting}" Foreground="{DynamicResource SecondaryText.Foreground}" FontSize="13" TextWrapping="Wrap" MaxWidth="500"/>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Grid.Row="1">
+                <Border Background="#FF313131" Height="1"/>
+                <Button HorizontalAlignment="Right" Margin="0,8,20,8" Content="{DynamicResource GeneralText_Cancel}" Theme="{StaticResource DialogButton}" Click="Cancel_Click" x:Name="CancelButton"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

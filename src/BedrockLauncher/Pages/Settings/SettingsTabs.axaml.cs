@@ -17,6 +17,7 @@ namespace BedrockLauncher.Pages.Settings
             pages = new Dictionary<ToggleButton, Func<Control>>
             {
                 [GeneralButton] = () => new GeneralSettingsPage(),
+                [AccountsButton] = () => new AccountsPage(),
                 [VersionsButton] = () => new VersionsPage(),
                 [LinuxButton] = () => new LinuxSettingsPage(),
                 [AboutButton] = () => new AboutPage(),
@@ -32,6 +33,7 @@ namespace BedrockLauncher.Pages.Settings
         }
 
         public void NavigateToLinux() => Navigate(LinuxButton);
+        public void NavigateToAccounts() => Navigate(AccountsButton);
 
         private void Tab_Click(object sender, RoutedEventArgs e) => Navigate((ToggleButton)sender);
     }

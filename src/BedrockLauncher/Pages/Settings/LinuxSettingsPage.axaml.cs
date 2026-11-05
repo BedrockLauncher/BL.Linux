@@ -18,7 +18,7 @@ namespace BedrockLauncher.Pages.Settings
             var s = Properties.LauncherSettings.Default;
             UwpPath.Text = s.UwpRuntimePath;
             GdkPath.Text = s.GdkRuntimePath;
-            GdkKind.SelectedIndex = s.GdkRuntimeKind == GameRuntimeKind.WineGdk ? 1 : 0;
+            GdkKind.SelectedIndex = s.GdkRuntimeKind == GameRuntimeKind.GdkProton ? 1 : 0;
             UseDxvk.IsChecked = s.UseDxvk;
             UseGameMode.IsChecked = s.UseGameMode;
             UseMangoHud.IsChecked = s.UseMangoHud;
@@ -34,7 +34,7 @@ namespace BedrockLauncher.Pages.Settings
             var s = Properties.LauncherSettings.Default;
             s.UwpRuntimePath = UwpPath.Text?.Trim() ?? string.Empty;
             s.GdkRuntimePath = GdkPath.Text?.Trim() ?? string.Empty;
-            s.GdkRuntimeKind = GdkKind.SelectedIndex == 1 ? GameRuntimeKind.WineGdk : GameRuntimeKind.GdkProton;
+            s.GdkRuntimeKind = GdkKind.SelectedIndex == 1 ? GameRuntimeKind.GdkProton : GameRuntimeKind.WineGdk;
             s.UseDxvk = UseDxvk.IsChecked == true;
             s.UseGameMode = UseGameMode.IsChecked == true;
             s.UseMangoHud = UseMangoHud.IsChecked == true;

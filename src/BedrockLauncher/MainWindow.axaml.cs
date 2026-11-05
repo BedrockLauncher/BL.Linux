@@ -33,6 +33,7 @@ namespace BedrockLauncher
             {
                 Trace.WriteLine("Preparing Application...");
                 MainDataModel.Default.LoadConfig();
+                await Accounts.AccountManager.Default.RestoreAsync();
                 await MainDataModel.Default.LoadVersions(true);
                 Trace.WriteLine("Preparing Application: DONE");
             });

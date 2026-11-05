@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="BedrockLauncher.Pages.Settings.AccountsPage"
+             Background="#FF1F1F1F">
+    <ScrollViewer>
+        <StackPanel Margin="0,0,0,20">
+            <Border Margin="30,24,30,8" Padding="24,20" Background="#FF282828" BorderBrush="#FF4A4A4A" BorderThickness="1">
+                <TextBlock Text="{DynamicResource SettingsTab_AccountsButton}" Foreground="White" FontFamily="{StaticResource MinecraftTen}" FontSize="32"/>
+            </Border>
+
+            <TextBlock Margin="42,30,0,0" Text="{DynamicResource Linux_Account_Title}" Classes="HeaderTextblock"/>
+            <TextBlock Margin="42,5,30,0" Text="{DynamicResource Linux_Account_Text}" Foreground="{DynamicResource SecondaryText.Foreground}" FontSize="13" TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left"/>
+
+            <Border Margin="42,16,30,0" Padding="16" Background="#FF282828" BorderBrush="#FF4A4A4A" BorderThickness="1" HorizontalAlignment="Left" MinWidth="460">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Border Width="48" Height="48" CornerRadius="24" ClipToBounds="True" VerticalAlignment="Center">
+                        <Image Source="avares://BedrockLauncher/Resources/images/icons/user_icon.png" Stretch="Fill"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="StatusText" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="XuidText" Foreground="{DynamicResource TertiaryText.Foreground}" FontSize="11"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="SignInButton" Content="{DynamicResource Linux_Account_SignIn}" Theme="{StaticResource DialogButton_Green}" Click="SignIn_Click"/>
+                        <Button x:Name="SignOutButton" Content="{DynamicResource Linux_Account_SignOut}" Theme="{StaticResource DialogButton_Red}" Click="SignOut_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <TextBlock Margin="42,30,0,0" Text="{DynamicResource Linux_Xodus_Title}" Classes="HeaderTextblock"/>
+            <TextBlock Margin="42,5,30,0" Text="{DynamicResource Linux_Xodus_Text}" Foreground="{DynamicResource SecondaryText.Foreground}" FontSize="13" TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left"/>
+            <Border Margin="42,16,30,0" Padding="16" Background="#FF282828" BorderBrush="#FF4A4A4A" BorderThickness="1" HorizontalAlignment="Left" MinWidth="460">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock x:Name="XodusStatus" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="XodusPathText" Foreground="{DynamicResource TertiaryText.Foreground}" FontSize="11" FontFamily="monospace"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="XodusSignInButton" Content="{DynamicResource Linux_Xodus_SignIn}" Theme="{StaticResource DialogButton_Green}" Click="XodusSignIn_Click"/>
+                        <Button x:Name="XodusSignOutButton" Content="{DynamicResource Linux_Account_SignOut}" Theme="{StaticResource DialogButton_Red}" Click="XodusSignOut_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <TextBlock Margin="42,12,0,5" Text="{DynamicResource Linux_Xodus_Path}" Classes="HeaderTextblock"/>
+            <TextBox x:Name="XodusPathBox" Width="460" HorizontalAlignment="Left" Margin="42,0,0,0" FontFamily="monospace" LostFocus="XodusPath_LostFocus"/>
+
+            <TextBlock Margin="42,30,0,5" Text="{DynamicResource Linux_Account_ClientId}" Classes="HeaderTextblock"/>
+            <TextBox x:Name="ClientIdBox" Width="460" HorizontalAlignment="Left" Margin="42,0,0,0" FontFamily="monospace" Watermark="00000000-0000-0000-0000-000000000000" LostFocus="ClientId_LostFocus"/>
+            <TextBlock Margin="42,6,30,0" Text="{DynamicResource Linux_Account_ClientIdHelp}" Foreground="{DynamicResource TertiaryText.Foreground}" FontSize="12" TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

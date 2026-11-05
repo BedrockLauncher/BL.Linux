@@ -7,6 +7,7 @@
             <TextBlock Text="{DynamicResource SettingsTab_Title}" Margin="17,32,0,0" Classes="TabTitle" VerticalAlignment="Top" HorizontalAlignment="Left"/>
             <StackPanel HorizontalAlignment="Left" Height="35" VerticalAlignment="Top" Orientation="Horizontal" Margin="5,49,0,0">
                 <ToggleButton x:Name="GeneralButton" Click="Tab_Click" Content="{DynamicResource SettingsTab_GeneralButton}" Theme="{StaticResource ToolbarButton}" ToolTip.Tip="{DynamicResource SettingsTab_GeneralButton}"/>
+                <ToggleButton x:Name="AccountsButton" Click="Tab_Click" Content="{DynamicResource SettingsTab_AccountsButton}" Theme="{StaticResource ToolbarButton}" ToolTip.Tip="{DynamicResource SettingsTab_AccountsButton}"/>
                 <ToggleButton x:Name="VersionsButton" Click="Tab_Click" Content="{DynamicResource SettingsTab_VersionsButton}" Theme="{StaticResource ToolbarButton}" ToolTip.Tip="{DynamicResource SettingsTab_VersionsButton}"/>
                 <ToggleButton x:Name="LinuxButton" Click="Tab_Click" Content="{DynamicResource Linux_SettingsTab}" Theme="{StaticResource ToolbarButton}" ToolTip.Tip="{DynamicResource Linux_SettingsTab}"/>
                 <ToggleButton x:Name="AboutButton" Click="Tab_Click" Content="{DynamicResource SettingsTab_AboutButton}" Theme="{StaticResource ToolbarButton}" ToolTip.Tip="{DynamicResource SettingsTab_AboutButton}"/>

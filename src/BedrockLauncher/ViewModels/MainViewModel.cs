@@ -114,7 +114,18 @@ namespace BedrockLauncher.ViewModels
 
         #region IUiHost
 
-        public Task ShowException(Exception ex) => ErrorScreen.ShowException(ex);
+        public async Task ShowException(Exception ex)
+        {
+            if (ex is Exceptions.AccountRequiredException)
+            {
+                // Offer the sign-in instead of a dead-end error.
+                var answer = await DialogPrompt.ShowDialog_YesNo(LanguageManager.GetResource("Linux_Account_Title"), ex.Message + "\n\n" + LanguageManager.GetResource("Linux_Account_SignIn") + "?");
+                if (answer == DialogResult.Yes)
+                    Dispatcher.UIThread.Post(() => (MainWindow as BedrockLauncher.MainWindow)?.MainPage.NavigateToAccounts());
+                return;
+            }
+            await ErrorScreen.ShowException(ex);
+        }
 
         public async Task<bool> Confirm(string titleResource, string messageResource, params object[] args)
         {

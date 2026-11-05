@@ -36,8 +36,8 @@
             <TextBlock Margin="42,5,0,0" Text="{DynamicResource Linux_Settings_GdkText}" Classes="Text"/>
             <TextBlock Margin="42,12,0,5" Text="{DynamicResource Linux_Settings_Runtime}" Classes="HeaderTextblock"/>
             <ComboBox x:Name="GdkKind" Theme="{StaticResource BlankComboBoxStyle}" Width="260" HorizontalAlignment="Left" Margin="42,0,0,0" SelectionChanged="GdkKind_SelectionChanged">
-                <ComboBoxItem Content="GDK-Proton" Tag="GdkProton"/>
                 <ComboBoxItem Content="WineGDK" Tag="WineGdk"/>
+                <ComboBoxItem Content="GDK-Proton" Tag="GdkProton"/>
             </ComboBox>
             <TextBlock Margin="42,12,0,5" Text="{DynamicResource Linux_Settings_RuntimePath}" Classes="HeaderTextblock"/>
             <ContentControl Theme="{StaticResource TextboxLikeFrame}" Height="32" Width="560" HorizontalAlignment="Left" Margin="42,0,0,0">

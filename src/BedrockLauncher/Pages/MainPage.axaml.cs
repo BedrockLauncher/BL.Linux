@@ -53,6 +53,12 @@ namespace BedrockLauncher.Pages
             MainWindowFrame.Content = settingsScreenPage ??= new SettingsTabs();
         }
 
+        public void NavigateToAccounts()
+        {
+            NavigateToSettings();
+            settingsScreenPage.NavigateToAccounts();
+        }
+
         private void NewsButton_Click(object sender, RoutedEventArgs e) => NavigateToNewsPage();
         private void BedrockEditionButton_Click(object sender, RoutedEventArgs e) => NavigateToGamePage();
         private void SettingsButton_Click(object sender, RoutedEventArgs e) => NavigateToSettings();
