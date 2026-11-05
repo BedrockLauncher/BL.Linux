@@ -76,6 +76,18 @@ namespace BedrockLauncher.Downloaders
                    VersionJsonDb.FilterUrlsForIdentity(urls, v.RequiredGdkPackage).Length > 0;
         }
 
+        /// <summary>The catalogued download URLs of exactly the version's required GDK package (Rayth's GdkLinks list).</summary>
+        public string[] GetGdkDownloadUrls(MCVersion v)
+        {
+            if (v?.RequiredGdkPackage == null) return Array.Empty<string>();
+            string id = v.UUID == Constants.LATEST_RELEASE_UUID ? latestReleaseRef?.PackageID
+                : v.UUID == Constants.LATEST_PREVIEW_UUID ? latestPreviewRef?.PackageID
+                : v.PackageID;
+            return VersionDB.TryGetGdkDownloadUrls(id, out List<string> urls)
+                ? VersionJsonDb.FilterUrlsForIdentity(urls, v.RequiredGdkPackage)
+                : Array.Empty<string>();
+        }
+
         /// <summary>Downloads exactly the required GDK package of a GDK version.</summary>
         public async Task DownloadGdkPackage(
             MCVersion v,

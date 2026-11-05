@@ -14,7 +14,8 @@ namespace BedrockLauncher.Runtime
     /// </summary>
     public sealed class WinePrefixManager
     {
-        public static readonly string[] DxvkLibraries = { "d3d8", "d3d9", "d3d10core", "d3d11", "dxgi" };
+        /// <summary>DXVK (D3D8-11) and vkd3d-proton (D3D12) libraries copied into the prefix when the runtime ships them.</summary>
+        public static readonly string[] DxvkLibraries = { "d3d8", "d3d9", "d3d10core", "d3d11", "dxgi", "d3d12", "d3d12core" };
 
         private readonly IProcessRunner runner;
         private readonly Action<string> log;
@@ -50,7 +51,8 @@ namespace BedrockLauncher.Runtime
                     throw new InvalidOperationException($"wineboot failed (exit code {code}) for prefix {prefixPath}.");
             }
 
-            if (useDxvk && runtime.Kind == GameRuntimeKind.WineUwp)
+            // wine-uwp ships dxvk-uwp (CoreWindow swapchains); runtime/winegdk/build.sh adds DXVK + vkd3d-proton.
+            if (useDxvk)
                 await InstallDxvkAsync(runtime, prefixPath, cancellationToken);
         }
 
@@ -81,7 +83,7 @@ namespace BedrockLauncher.Runtime
 
             if (installed.Count == 0)
             {
-                log("dxvk-uwp is not part of this runtime; the game will use wined3d.");
+                log("This runtime ships no DXVK; the game will use wined3d (OpenGL).");
                 return;
             }
 

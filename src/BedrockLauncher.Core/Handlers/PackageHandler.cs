@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BedrockLauncher.Accounts;
 using BedrockLauncher.Classes;
 using BedrockLauncher.Downloaders;
 using BedrockLauncher.Enums;
@@ -186,6 +187,7 @@ namespace BedrockLauncher.Handlers
             try
             {
                 StartTask();
+                RequireAccount();
                 if (Directory.Exists(path))
                 {
                     await ImportGdkFolder(path, null);
@@ -257,6 +259,7 @@ namespace BedrockLauncher.Handlers
 
             if (package != backup)
             {
+                RequireAccount();
                 Progress.SetProgressBarState(LauncherState.isDownloading);
                 Progress.AllowCancel = true;
                 try
@@ -329,9 +332,25 @@ namespace BedrockLauncher.Handlers
 
         #region GDK
 
+        private string XodusCli => Xodus.Locate(Paths.RuntimesFolder, LauncherSettings.Default.XodusPath);
+
+        /// <summary>Download URLs of a GDK version (the catalog; replaced in tests).</summary>
+        public Func<MCVersion, string[]> GdkUrlResolver { get; set; }
+
         private async Task EnsureGdkFiles(MCVersion v)
         {
             if (v.HasPlayableFiles) return;
+
+            // With Xodus the package is downloaded from the catalog (Rayth's GdkLinks) and licensed with the user's
+            // Xbox account; without it the files have to come from a Windows install.
+            string cli = XodusCli;
+            string[] urls = (GdkUrlResolver ?? VersionDownloader.GetGdkDownloadUrls)(v);
+            if (cli != null && urls.Length > 0)
+            {
+                await DownloadGdkWithXodus(cli, v, urls);
+                return;
+            }
+
             await ImportGdkInteractive(v);
             if (!v.HasPlayableFiles)
                 throw new GdkFilesRequiredException(string.Format(LanguageManager.GetResource("Linux_GdkFilesRequired"), v.Name));
@@ -339,14 +358,52 @@ namespace BedrockLauncher.Handlers
 
         private async Task ImportGdkInteractive(MCVersion v)
         {
+            RequireAccount();
             string folder = Model.UiHost == null ? null : await Model.UiHost.PickFolder(string.Format(LanguageManager.GetResource("Linux_GdkPickFolder"), v.Name));
             if (string.IsNullOrEmpty(folder)) throw new OperationCanceledException();
             await ImportGdkFolder(folder, v);
         }
 
+        private async Task DownloadGdkWithXodus(string cli, MCVersion v, string[] urls)
+        {
+            RequireAccount();
+            if (!LauncherSettings.Default.XodusSignedIn)
+                throw new AccountRequiredException(LanguageManager.GetResource("Linux_XodusLoginRequired"));
+
+            Progress.SetProgressBarState(LauncherState.isDownloading);
+            Progress.IsIndeterminate = true;
+            string staging = v.GameDirectory.TrimEnd('/') + ".partial";
+            Exception last = null;
+            foreach (string url in urls)
+            {
+                await DeleteDirectoryIfExists(staging);
+                Directory.CreateDirectory(staging);
+                Trace.WriteLine($"Xodus: streaming {url}");
+                int code = await Runner.RunAsync(Xodus.Streaming(cli, url, staging), line =>
+                {
+                    Trace.WriteLine("[xodus] " + line);
+                    if (!string.IsNullOrWhiteSpace(line)) Progress.SetProgressBarText(line.Trim());
+                }, CancelSource.Token);
+
+                if (code == 0 && File.Exists(Path.Combine(staging, Constants.MINECRAFT_EXECUTABLE)))
+                {
+                    await File.WriteAllTextAsync(Path.Combine(staging, MCVersionExtensions.IdentificationFilename), v.PackageID ?? v.UUID);
+                    await DeleteDirectoryIfExists(v.GameDirectory);
+                    Directory.Move(staging, v.GameDirectory);
+                    v.UpdateFolderSize();
+                    return;
+                }
+                last = new IOException($"xodus-cli streaming exited with code {code} for {url}");
+                Trace.WriteLine(last.Message);
+            }
+            await DeleteDirectoryIfExists(staging);
+            throw new PackageDownloadFailedException(last ?? new IOException("No download source worked."));
+        }
+
         /// <summary>Imports decrypted GDK game files; with a target version they must be that exact build.</summary>
         public async Task ImportGdkFolder(string folder, MCVersion target)
         {
+            RequireAccount();
             GdkGameFiles.Inspection inspection = GdkGameFiles.Inspect(folder);
             if (!inspection.IsValid)
                 throw new GdkFilesRequiredException(string.Join("\n", inspection.Problems));
@@ -433,6 +490,18 @@ namespace BedrockLauncher.Handlers
             };
 
             LaunchCommand command = LaunchCommandBuilder.Build(request);
+            if (v.IsGdk && Xodus.IsXodusInstall(v.GameDirectory))
+            {
+                // Installed through Xodus: the executable is still encrypted; xodus-cli licenses and decrypts it.
+                string cli = XodusCli ?? throw new RuntimeNotFoundException(LanguageManager.GetResource("Linux_XodusMissing"));
+                if (runtime.UsesProtonScript)
+                {
+                    request.Runtime = new GameRuntime { Kind = GameRuntimeKind.WineGdk, Name = runtime.Name, RootPath = runtime.RootPath, Origin = runtime.Origin };
+                    request.PrefixPath = WinePrefixManager.GetWinePrefix(prefix, runtime);
+                    command = LaunchCommandBuilder.Build(request);
+                }
+                command = Xodus.WrapRun(cli, command, v.GameDirectory, Constants.MINECRAFT_EXECUTABLE);
+            }
             gameRuntime = runtime;
             gamePrefix = prefix;
 
@@ -510,6 +579,13 @@ namespace BedrockLauncher.Handlers
         #endregion
 
         #region Helpers
+
+        /// <summary>New game files (Store download, GDK import, package import) need a signed-in account.</summary>
+        private static void RequireAccount()
+        {
+            if (!AccountManager.Default.MayDownload)
+                throw new AccountRequiredException(LanguageManager.GetResource("Linux_AccountRequired"));
+        }
 
         private void StartTask()
         {

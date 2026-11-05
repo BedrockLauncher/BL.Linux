@@ -80,7 +80,8 @@ namespace BedrockLauncher.Classes
             {
                 if (!File.Exists(ExecutablePath)) return false;
                 if (PackageType == PackageType.GDK)
-                    return File.Exists(Path.Combine(GameDirectory, GdkGameFiles.GameConfigFileName)) && GdkGameFiles.IsPlainExecutable(ExecutablePath);
+                    return File.Exists(Path.Combine(GameDirectory, GdkGameFiles.GameConfigFileName)) &&
+                           (GdkGameFiles.IsPlainExecutable(ExecutablePath) || Xodus.IsXodusInstall(GameDirectory));
                 return File.Exists(ManifestPath);
             }
         }
