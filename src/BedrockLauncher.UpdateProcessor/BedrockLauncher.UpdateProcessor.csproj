@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>BedrockLauncher.UpdateProcessor</RootNamespace>
+    <AssemblyName>BedrockLauncher.UpdateProcessor</AssemblyName>
+    <Nullable>disable</Nullable>
+    <NoWarn>$(NoWarn);CA1416;SYSLIB0014</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Semver" Version="2.0.6" />
+  </ItemGroup>
+</Project>
