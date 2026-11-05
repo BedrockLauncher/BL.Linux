@@ -1,0 +1,433 @@
+<!--
+  Avalonia port of upstream Resources/styles: same colors, sizes and state behaviour as the WPF templates.
+  Keyed WPF styles (Style="{DynamicResource X}") become ControlThemes (Theme="{StaticResource X}"); implicit WPF styles
+  become Styles below.
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--#region Sidebar button (sidebar_button.xaml) -->
+    <ControlTheme x:Key="SideBarButtonStyle" TargetType="ToggleButton">
+        <Setter Property="VerticalAlignment" Value="Bottom"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="Height" Value="59"/>
+        <Setter Property="Width" Value="179"/>
+        <Setter Property="Background" Value="{DynamicResource ButtonSide.Static.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ButtonSide.Static.Border}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ButtonSide.Static.Foreground}"/>
+        <Setter Property="FontFamily" Value="{StaticResource NotoSans}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Padding" Value="55,1,1,1"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
+                    <Border.Transitions>
+                        <Transitions>
+                            <BrushTransition Property="Background" Duration="0:0:0.1"/>
+                            <BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
+                        </Transitions>
+                    </Border.Transitions>
+                    <Border Name="focus_border">
+                        <Grid ColumnDefinitions="3,*" RowDefinitions="*,*,*">
+                            <Panel Name="selection_indicator" Background="White" Grid.Column="0" Grid.Row="1" MaxHeight="0" IsVisible="False" VerticalAlignment="Center" Height="20">
+                                <Panel.Transitions>
+                                    <Transitions>
+                                        <DoubleTransition Property="MaxHeight" Duration="0:0:0.99"/>
+                                    </Transitions>
+                                </Panel.Transitions>
+                            </Panel>
+                            <ContentPresenter Grid.Column="1" Grid.RowSpan="3" Name="PART_ContentPresenter"
+                                              Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Grid>
+                    </Border>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover:not(:checked) /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource ButtonSide.MouseOver.BackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonSide.MouseOver.BackgroundBrush}"/>
+        </Style>
+        <Style Selector="^:pressed /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource ButtonSide.Pressed.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonSide.Pressed.Border}"/>
+        </Style>
+        <Style Selector="^:focus-visible /template/ Border#focus_border">
+            <Setter Property="Background" Value="{DynamicResource ButtonSide.Focused.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonSide.Focused.Border}"/>
+        </Style>
+        <Style Selector="^:checked">
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style Selector="^:checked /template/ Panel#selection_indicator">
+            <Setter Property="IsVisible" Value="True"/>
+            <Setter Property="MaxHeight" Value="100"/>
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Opacity" Value="0.5"/>
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="SideBarButtonIcon" TargetType="Image">
+        <Setter Property="RenderOptions.BitmapInterpolationMode" Value="None"/>
+        <Setter Property="IsHitTestVisible" Value="False"/>
+        <Setter Property="MinWidth" Value="29"/>
+        <Setter Property="MinHeight" Value="29"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Top"/>
+        <Setter Property="Width" Value="30"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Margin" Value="14,14,0,0"/>
+    </ControlTheme>
+    <!--#endregion-->
+
+    <!--#region Profile selector (profile_selector_button.xaml) -->
+    <ControlTheme x:Key="ProfileSelectorStyle" TargetType="ToggleButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="border" Background="{TemplateBinding Background}">
+                    <ContentPresenter Content="{TemplateBinding Content}" Margin="{TemplateBinding Padding}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource MenuItem.Context.Selected.Background}"/>
+        </Style>
+    </ControlTheme>
+    <!--#endregion-->
+
+    <!--#region Toolbar (tab) button (toolbar_button.xaml) -->
+    <ControlTheme x:Key="ToolbarButton" TargetType="ToggleButton">
+        <Setter Property="Background" Value="{DynamicResource ToolbarButton.Static.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ToolbarButton.Static.Border}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ToolbarButton.Static.Foreground}"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FontFamily" Value="{StaticResource NotoSans}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid Name="border" Background="{TemplateBinding Background}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="13,2,13,0"
+                      ColumnDefinitions="*,Auto,*" RowDefinitions="*,3">
+                    <!-- Bold, invisible copy keeps the width stable when the selected text turns bold. -->
+                    <ContentPresenter Name="bold_reserve" Content="{TemplateBinding Content}" FontWeight="Bold" Opacity="0" IsHitTestVisible="False"
+                                      Grid.ColumnSpan="3" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}" Grid.ColumnSpan="3"
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}" HorizontalAlignment="Center"/>
+                    <Panel Name="SelectorIndicator" Width="20" MaxWidth="0" Grid.Column="1" Grid.Row="1" Background="{TemplateBinding BorderBrush}">
+                        <Panel.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="MaxWidth" Duration="0:0:0.99"/>
+                            </Transitions>
+                        </Panel.Transitions>
+                    </Panel>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource ToolbarButton.MouseOver.Foreground}"/>
+        </Style>
+        <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style Selector="^:checked /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource ToolbarButton.Selected.Foreground}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style Selector="^:checked /template/ Panel#SelectorIndicator">
+            <Setter Property="MaxWidth" Value="100"/>
+        </Style>
+        <Style Selector="^:focus-visible">
+            <Setter Property="BorderBrush" Value="{DynamicResource ToolbarButton.Focused.Border}"/>
+        </Style>
+        <Style Selector="^:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource ToolbarButton.Disabled.Foreground}"/>
+        </Style>
+    </ControlTheme>
+    <!--#endregion-->
+
+    <!--#region Dialog buttons (dialog_buttons.xaml + DialogButton_Colors_*.xaml) -->
+    <ControlTheme x:Key="DialogButton" TargetType="Button">
+        <Setter Property="Background" Value="{DynamicResource DialogButton.Static.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource DialogButton.Static.Border}"/>
+        <Setter Property="Foreground" Value="{DynamicResource DialogButton.Static.Foreground}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="13,1"/>
+        <Setter Property="Margin" Value="4,4"/>
+        <Setter Property="MinHeight" Value="30"/>
+        <Setter Property="FontFamily" Value="{StaticResource NotoSans}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
+                    <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Margin="{TemplateBinding Padding}" Foreground="{TemplateBinding Foreground}"
+                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource DialogButton.MouseOver.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DialogButton.MouseOver.Border}"/>
+        </Style>
+        <Style Selector="^:pressed /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource DialogButton.Pressed.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DialogButton.Pressed.Border}"/>
+        </Style>
+        <Style Selector="^:disabled /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource DialogButton.Disabled.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DialogButton.Disabled.Border}"/>
+        </Style>
+        <Style Selector="^:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource DialogButton.Disabled.Foreground}"/>
+            <Setter Property="Opacity" Value="0.5"/>
+        </Style>
+        <Style Selector="^:focus-visible /template/ Border#border">
+            <Setter Property="BorderBrush" Value="White"/>
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="DialogButton_Green" TargetType="Button" BasedOn="{StaticResource DialogButton}">
+        <Setter Property="Background" Value="{DynamicResource DialogButtonGreen.Static.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource DialogButtonGreen.Static.Border}"/>
+        <Style Selector="^:pointerover /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource DialogButtonGreen.MouseOver.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DialogButtonGreen.MouseOver.Border}"/>
+        </Style>
+        <Style Selector="^:pressed /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource DialogButtonGreen.Pressed.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DialogButtonGreen.Pressed.Border}"/>
+        </Style>
+        <Style Selector="^:disabled /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource DialogButtonGreen.Disabled.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DialogButtonGreen.Disabled.Border}"/>
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="DialogButton_Red" TargetType="Button" BasedOn="{StaticResource DialogButton}">
+        <Setter Property="Background" Value="{DynamicResource DialogButtonRed.Static.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource DialogButtonRed.Static.Border}"/>
+        <Style Selector="^:pointerover /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource DialogButtonRed.MouseOver.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DialogButtonRed.MouseOver.Border}"/>
+        </Style>
+        <Style Selector="^:pressed /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource DialogButtonRed.Pressed.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DialogButtonRed.Pressed.Border}"/>
+        </Style>
+        <Style Selector="^:disabled /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource DialogButtonRed.Disabled.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DialogButtonRed.Disabled.Border}"/>
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="DialogButton_Blue" TargetType="Button" BasedOn="{StaticResource DialogButton}">
+        <Setter Property="Background" Value="{DynamicResource DialogButtonBlue.Static.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource DialogButtonBlue.Static.Border}"/>
+        <Style Selector="^:pointerover /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource DialogButtonBlue.MouseOver.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DialogButtonBlue.MouseOver.Border}"/>
+        </Style>
+        <Style Selector="^:pressed /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource DialogButtonBlue.Pressed.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DialogButtonBlue.Pressed.Border}"/>
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="DialogButton_Orange" TargetType="Button" BasedOn="{StaticResource DialogButton}">
+        <Setter Property="Background" Value="{DynamicResource DialogButtonOrange.Static.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource DialogButtonOrange.Static.Border}"/>
+        <Style Selector="^:pointerover /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource DialogButtonOrange.MouseOver.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DialogButtonOrange.MouseOver.Border}"/>
+        </Style>
+        <Style Selector="^:pressed /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource DialogButtonOrange.Pressed.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DialogButtonOrange.Pressed.Border}"/>
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="LinkButton" TargetType="Button">
+        <Setter Property="Foreground" Value="#FF2AA7FF"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"/>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover /template/ ContentPresenter">
+            <Setter Property="TextElement.Foreground" Value="#FF7CC8FF"/>
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="EmptyButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ContentPresenter Content="{TemplateBinding Content}" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"/>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+
+    <ControlTheme x:Key="ClosePopupButton" TargetType="Button">
+        <Setter Property="Background" Value="{DynamicResource ClosePopupButton.Static.Background}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ClosePopupButton.Static.Foreground}"/>
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="border" Background="{TemplateBinding Background}">
+                    <Path Data="M0,0 L12,12 M0,12 L12,0" Stroke="{TemplateBinding Foreground}" StrokeThickness="1.5" Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource ClosePopupButton.MouseOver.Background}"/>
+        </Style>
+    </ControlTheme>
+    <!--#endregion-->
+
+    <!--#region Play button (play_button.xaml) -->
+    <ImageBrush x:Key="PlayButton.Static.Background" Source="avares://BedrockLauncher/Resources/images/ui/panels/MainPagePlayButton.png" Stretch="Uniform"/>
+    <ImageBrush x:Key="PlayButton.MouseOver.Background" Source="avares://BedrockLauncher/Resources/images/ui/panels/MainPagePlayButtonOver.png" Stretch="Uniform"/>
+    <ImageBrush x:Key="PlayButton.Pressed.Background" Source="avares://BedrockLauncher/Resources/images/ui/panels/MainPagePlayButtonPressed.png" Stretch="Uniform"/>
+    <ImageBrush x:Key="PlayButton.Focused.MouseOver.Background" Source="avares://BedrockLauncher/Resources/images/ui/panels/MainPagePlayButtonFocusOver.png" Stretch="Uniform"/>
+
+    <ControlTheme x:Key="BigGreenButton" TargetType="Button">
+        <Setter Property="FontSize" Value="26"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryText.Foreground}"/>
+        <Setter Property="FontFamily" Value="{StaticResource MinecraftTen}"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="1"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="border" Background="{DynamicResource PlayButton.Static.Background}">
+                    <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}" Margin="{TemplateBinding Padding}"
+                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource PlayButton.MouseOver.Background}"/>
+        </Style>
+        <Style Selector="^:focus-visible /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource PlayButton.Focused.MouseOver.Background}"/>
+        </Style>
+        <Style Selector="^:pressed /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource PlayButton.Pressed.Background}"/>
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Opacity" Value="0.5"/>
+        </Style>
+    </ControlTheme>
+    <!--#endregion-->
+
+    <!--#region Combo boxes (combobox.xaml) -->
+    <ControlTheme x:Key="BlankComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+        <Setter Property="Background" Value="{DynamicResource ComboBox.Static.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ComboBox.Static.Border}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="CornerRadius" Value="0"/>
+        <Setter Property="FontFamily" Value="{StaticResource NotoSans}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="MinHeight" Value="30"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Style Selector="^:pointerover /template/ Border#Background">
+            <Setter Property="Background" Value="{DynamicResource ComboBox.MouseOver.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ComboBox.MouseOver.Border}"/>
+        </Style>
+        <Style Selector="^:focus-visible /template/ Border#Background">
+            <Setter Property="BorderBrush" Value="{DynamicResource ComboBox.Focused.Border}"/>
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="InstallationSelectorComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+        <Setter Property="Background" Value="{DynamicResource Selector.ComboBox.Static.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Selector.ComboBox.Static.Border}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="CornerRadius" Value="0"/>
+        <Setter Property="MaxDropDownHeight" Value="400"/>
+        <Style Selector="^:pointerover /template/ Border#Background">
+            <Setter Property="Background" Value="{DynamicResource Selector.ComboBox.MouseOver.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Selector.ComboBox.MouseOver.Border}"/>
+        </Style>
+        <Style Selector="^:pressed /template/ Border#Background">
+            <Setter Property="Background" Value="{DynamicResource Selector.ComboBox.Pressed.Background}"/>
+        </Style>
+        <Style Selector="^ /template/ Border#PopupBorder">
+            <Setter Property="Background" Value="{DynamicResource Selector.ComboBox.Dropdown.Static.Background}"/>
+            <Setter Property="CornerRadius" Value="0"/>
+        </Style>
+    </ControlTheme>
+    <!--#endregion-->
+
+    <!--#region Text boxes (textbox.xaml) -->
+    <ControlTheme x:Key="BlankTextBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="SelectionBrush" Value="{DynamicResource TextBox.SelectionBrush}"/>
+        <Style Selector="^:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="^:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="TextboxLikeFrame" TargetType="ContentControl">
+        <Setter Property="Background" Value="{DynamicResource TextBox.Static.Background}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource TextBox.Static.Border}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                    <ContentPresenter Content="{TemplateBinding Content}"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover /template/ Border#border">
+            <Setter Property="Background" Value="{DynamicResource TextBox.MouseOver.Background}"/>
+        </Style>
+        <Style Selector="^:focus-within /template/ Border#border">
+            <Setter Property="BorderBrush" Value="{DynamicResource TextBox.Focus.Border}"/>
+            <Setter Property="Background" Value="{DynamicResource TextBox.Focus.Background}"/>
+        </Style>
+    </ControlTheme>
+    <!--#endregion-->
+
+    <!--#region Icons (icons.xaml) -->
+    <StreamGeometry x:Key="FolderIconGeometry">M 1.3997323e-4 2.2488189 H -2.5131058 V 4.9996896e-7 L -2.5133858 -2.2488189 h 0.7939371 0.79387707 l -2.2e-4 0.2645666 v 0.2645676 H 0.79379707 2.5133859 V 0.26456708 2.2488189 Z m 0 -0.2645666 H 2.2488368 V 0.26456708 -1.4551172 H 1.3997323e-4 -2.2484168 l -1.4e-4 1.71968428 V 1.9842523 Z M -1.7194487 -1.7614592 l 0.5289081 -1.439e-4 v -0.2669835 h -0.5289381 -0.5289381 v 0.2671274 z</StreamGeometry>
+    <StreamGeometry x:Key="UpArrowIcon">M2,48 L4,48 L32,15 L60,48 L62,48 L32,12 Z</StreamGeometry>
+    <StreamGeometry x:Key="DownArrowIcon">M2,12 L4,12 L32,45 L60,12 L62,12 L32,48 Z</StreamGeometry>
+    <StreamGeometry x:Key="CrossIcon">M0,0 L25,25 M0,25 L25,0</StreamGeometry>
+    <StreamGeometry x:Key="ExpandableIcon">M0,0 h3 v3 h-3 Z M5,0 h3 v3 h-3 Z M10,0 h3 v3 h-3 Z</StreamGeometry>
+    <StreamGeometry x:Key="SearchIconGeometry">M15.853,16.56C14.17,18.077 11.942,19 9.5,19 4.257,19 0,14.743 0,9.5 0,4.257 4.257,0 9.5,0 14.743,0 19,4.257 19,9.5 19,11.942 18.077,14.17 16.56,15.853L24,23.293 23.293,24 15.853,16.56z M9.5,1C14.191,1 18,4.809 18,9.5 18,14.191 14.191,18 9.5,18 4.809,18 1,14.191 1,9.5 1,4.809 4.809,1 9.5,1z</StreamGeometry>
+    <StreamGeometry x:Key="PlusIconGeometry">M256,0C114.84,0 0,114.84 0,256 0,397.16 114.84,512 256,512 397.16,512 512,397.16 512,256 512,114.84 397.16,0 256,0z M256,475.429C135.003,475.429 36.571,376.997 36.571,256 36.571,135.003 135.003,36.571 256,36.571 376.997,36.571 475.429,135.003 475.429,256 475.429,376.997 376.997,475.429 256,475.429z M256,134.095C245.9,134.095,237.714,142.281,237.714,152.381L237.714,359.619C237.714,369.719 245.9,377.905 256,377.905 266.1,377.905 274.286,369.719 274.286,359.619L274.286,152.381C274.286,142.281,266.1,134.095,256,134.095z M359.619,237.714L152.381,237.714C142.281,237.714 134.095,245.9 134.095,256 134.095,266.1 142.281,274.286 152.381,274.286L359.619,274.286C369.719,274.286 377.905,266.1 377.905,256 377.905,245.9 369.719,237.714 359.619,237.714z</StreamGeometry>
+    <!--#endregion-->
+
+</ResourceDictionary>
