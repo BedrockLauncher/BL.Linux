@@ -1,0 +1,144 @@
+--- a/dlls/windows.storage/applicationdata.c	2026-11-05 10:31:02.274828118 +0000
++++ b/dlls/windows.storage/applicationdata.c	2026-11-05 10:31:20.678106765 +0000
+@@ -121,6 +121,7 @@
+     IStorageFolder IStorageFolder_iface;
+     IStorageItem IStorageItem_iface;
+     LONG ref;
++    WCHAR path[MAX_PATH];
+ };
+ 
+ static inline struct storage_folder *impl_from_IStorageFolder( IStorageFolder *iface )
+@@ -321,15 +322,12 @@
+ 
+ static HRESULT WINAPI storage_item_get_Path( IStorageItem *iface, HSTRING *value )
+ {
+-    WCHAR buffer[MAX_PATH];
+-    HRESULT hr;
+-
+-    TRACE( "iface %p, value %p\n", iface, value );
++    struct storage_folder *impl = impl_from_IStorageItem( iface );
+ 
+-    if (!GetModuleFileNameW( NULL, buffer, MAX_PATH )) return HRESULT_FROM_WIN32( GetLastError() );
+-    if (FAILED( hr = PathCchRemoveFileSpec( buffer, ARRAY_SIZE(buffer) ) )) return hr;
++    TRACE( "iface %p, value %p -> %s\n", iface, value, debugstr_w(impl->path) );
+ 
+-    return WindowsCreateString( buffer, wcslen(buffer), value );
++    if (!value) return E_INVALIDARG;
++    return WindowsCreateString( impl->path, wcslen(impl->path), value );
+ }
+ 
+ static HRESULT WINAPI storage_item_get_Attributes( IStorageItem *iface, FileAttributes *value )
+@@ -480,58 +478,86 @@
+     return S_OK;
+ }
+ 
+-static HRESULT WINAPI application_data_get_LocalFolder( IApplicationData *iface, IStorageFolder **value )
++/* Creates every missing directory of an absolute path. */
++static void create_directory_tree( const WCHAR *path )
+ {
+-    struct storage_folder *impl;
++    WCHAR buffer[MAX_PATH];
++    WCHAR *p;
+ 
+-    FIXME( "iface %p, value %p semi-stub!\n", iface, value );
++    lstrcpynW( buffer, path, ARRAY_SIZE(buffer) );
++    for (p = buffer; *p; p++)
++    {
++        if (*p != '\\' || p == buffer || p[-1] == ':') continue;
++        *p = 0;
++        CreateDirectoryW( buffer, NULL );
++        *p = '\\';
++    }
++    CreateDirectoryW( buffer, NULL );
++}
+ 
+-    if (!value) return E_INVALIDARG;
+-    if (!(impl = calloc( 1, sizeof(*impl) ))) return E_OUTOFMEMORY;
++/* Resolves the folder backing ApplicationData.{Local,Roaming,Temporary}Folder.
++ *
++ * Windows keeps them in %LOCALAPPDATA%\Packages\<family>\{LocalState,RoamingState,TempState}. Without a
++ * package registration wine has no family name, so the data root comes from WINEUWP_PACKAGE_DATA when set
++ * (launchers point it at a per-installation folder); otherwise <exe dir>\<state>, so the data never lands
++ * loose next to the game binaries. */
++static HRESULT get_package_state_folder( const WCHAR *state, WCHAR *buffer, DWORD size )
++{
++    WCHAR root[MAX_PATH];
++    DWORD len;
++    HRESULT hr;
+ 
+-    impl->IStorageFolder_iface.lpVtbl = &storage_folder_vtbl;
+-    impl->IStorageItem_iface.lpVtbl = &storage_item_vtbl;
+-    impl->ref = 1;
++    len = GetEnvironmentVariableW( L"WINEUWP_PACKAGE_DATA", root, ARRAY_SIZE(root) );
++    if (!len || len >= ARRAY_SIZE(root))
++    {
++        if (!GetModuleFileNameW( NULL, root, ARRAY_SIZE(root) )) return HRESULT_FROM_WIN32( GetLastError() );
++        if (FAILED( hr = PathCchRemoveFileSpec( root, ARRAY_SIZE(root) ) )) return hr;
++    }
+ 
+-    *value = &impl->IStorageFolder_iface;
+-    TRACE( "created IStorageFolder %p.\n", *value );
++    if (FAILED( hr = PathCchCombine( buffer, size, root, state ) )) return hr;
++    create_directory_tree( buffer );
+     return S_OK;
+ }
+ 
+-static HRESULT WINAPI application_data_get_RoamingFolder( IApplicationData *iface, IStorageFolder **value )
++static HRESULT create_state_folder( const WCHAR *state, IStorageFolder **value )
+ {
+     struct storage_folder *impl;
+-
+-    FIXME( "iface %p, value %p semi-stub!\n", iface, value );
++    HRESULT hr;
+ 
+     if (!value) return E_INVALIDARG;
+     if (!(impl = calloc( 1, sizeof(*impl) ))) return E_OUTOFMEMORY;
+ 
++    if (FAILED( hr = get_package_state_folder( state, impl->path, ARRAY_SIZE(impl->path) ) ))
++    {
++        free( impl );
++        return hr;
++    }
++
+     impl->IStorageFolder_iface.lpVtbl = &storage_folder_vtbl;
+     impl->IStorageItem_iface.lpVtbl = &storage_item_vtbl;
+     impl->ref = 1;
+ 
+     *value = &impl->IStorageFolder_iface;
+-    TRACE( "created IStorageFolder %p.\n", *value );
++    TRACE( "created IStorageFolder %p for %s.\n", *value, debugstr_w(impl->path) );
+     return S_OK;
+ }
+ 
+-static HRESULT WINAPI application_data_get_TemporaryFolder( IApplicationData *iface, IStorageFolder **value )
++static HRESULT WINAPI application_data_get_LocalFolder( IApplicationData *iface, IStorageFolder **value )
+ {
+-    struct storage_folder *impl;
+-    
+-    FIXME( "iface %p, value %p semi-stub!\n", iface, value );
+-
+-    if (!value) return E_INVALIDARG;
+-    if (!(impl = calloc( 1, sizeof(*impl) ))) return E_OUTOFMEMORY;
++    TRACE( "iface %p, value %p\n", iface, value );
++    return create_state_folder( L"LocalState", value );
++}
+ 
+-    impl->IStorageFolder_iface.lpVtbl = &storage_folder_vtbl;
+-    impl->IStorageItem_iface.lpVtbl = &storage_item_vtbl;
+-    impl->ref = 1;
++static HRESULT WINAPI application_data_get_RoamingFolder( IApplicationData *iface, IStorageFolder **value )
++{
++    TRACE( "iface %p, value %p\n", iface, value );
++    return create_state_folder( L"RoamingState", value );
++}
+ 
+-    *value = &impl->IStorageFolder_iface;
+-    TRACE( "created IStorageFolder %p.\n", *value );
+-    return S_OK;
++static HRESULT WINAPI application_data_get_TemporaryFolder( IApplicationData *iface, IStorageFolder **value )
++{
++    TRACE( "iface %p, value %p\n", iface, value );
++    return create_state_folder( L"TempState", value );
+ }
+ 
+ static HRESULT WINAPI application_data_add_DataChanged( IApplicationData *iface, ITypedEventHandler_ApplicationData_IInspectable *handler,
