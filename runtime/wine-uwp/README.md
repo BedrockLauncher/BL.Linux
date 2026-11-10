@@ -24,6 +24,17 @@ NO_DXVK=1 ./build.sh        # skip dxvk-uwp (OpenGL through wined3d)
 | `gen_app_crt_dlls.py` | Adds `msvcp140_app`, `vcruntime140_app`, `vcruntime140_1_app` and `concrt140_app` as forwarders to the desktop VC++ runtime. UWP Minecraft imports them from the `Microsoft.VCLibs.140.00` framework package, which Wine does not have. |
 | `patches/0001-windows.storage-…` | `ApplicationData.LocalFolder` / `RoamingFolder` / `TemporaryFolder` returned the executable's folder, so worlds ended up inside the version folder. They now resolve to `%WINEUWP_PACKAGE_DATA%\{LocalState,RoamingState,TempState}` (the launcher points it at each installation's `packageData` folder, the same layout as `%LOCALAPPDATA%\Packages\<family>` on Windows), or `<exe dir>\<state>` when unset. |
 | `tools/make_makefiles` before configure | Regenerates the makefile list from the tree. |
+| esync (`ESYNC=1`, default) | Applies wine-staging v9.16's `eventfd_synchronization` patch set (and the three sets it depends on): the esync code GE-Proton's wine carries. Wine events, semaphores and mutexes become eventfd operations instead of wineserver round trips. The launcher starts the game with `WINEESYNC=1` and a raised open-file limit. |
+| GE-Proton build flags | `-O2 -march=nocona -mtune=core-avx2 -mfpmath=sse -fwrapv -fno-strict-aliasing` for the Unix and PE sides (`OPT_CFLAGS`), as in GE-Proton's `Makefile.in`. |
+
+## What "like GE-Proton" covers
+
+Taken from GE-Proton: its compiler flags, the esync patch set, and the environment its `proton` script sets
+(`WINEESYNC` / `WINEFSYNC` / `WINENTSYNC`, quiet DXVK / vkd3d logging, persistent shader caches). WineGDK is Wine 11,
+which has ntsync built in (used when the kernel provides `/dev/ntsync`, 6.14+), and gets DXVK + vkd3d-proton.
+
+Not taken: fsync (futex-based; its patches are written against Valve's wine tree, not vanilla 9.16) and Valve's
+game-specific patches. No frame-rate comparison against GE-Proton has been made.
 
 ## Verified
 
