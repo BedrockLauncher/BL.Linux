@@ -29,6 +29,15 @@ namespace BedrockLauncher.Pages
 
         #region Navigation
 
+        private int pageIndex = -1;
+
+        // Sidebar pages swipe vertically, by their position in the sidebar (upstream Navigator page indexes).
+        private void Show(Control page, int index)
+        {
+            UI.PageAnimator.Navigate(MainWindowFrame, page, pageIndex, index, vertical: true);
+            pageIndex = index;
+        }
+
         private void Select(ToggleButton selected)
         {
             foreach (var button in new[] { NewsButton, BedrockEditionButton, SettingsButton })
@@ -38,19 +47,19 @@ namespace BedrockLauncher.Pages
         public void NavigateToNewsPage()
         {
             Select(NewsButton);
-            MainWindowFrame.Content = newsScreenPage ??= new NewsScreenTabs();
+            Show(newsScreenPage ??= new NewsScreenTabs(), 0);
         }
 
         public void NavigateToGamePage()
         {
             Select(BedrockEditionButton);
-            MainWindowFrame.Content = gamePage ??= new GameTabs();
+            Show(gamePage ??= new GameTabs(), 1);
         }
 
         public void NavigateToSettings()
         {
             Select(SettingsButton);
-            MainWindowFrame.Content = settingsScreenPage ??= new SettingsTabs();
+            Show(settingsScreenPage ??= new SettingsTabs(), 4);
         }
 
         public void NavigateToAccounts()

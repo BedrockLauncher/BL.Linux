@@ -10,6 +10,7 @@ namespace BedrockLauncher.Pages.Play
     {
         private readonly Dictionary<ToggleButton, Func<Control>> pages;
         private readonly Dictionary<ToggleButton, Control> created = new();
+        private int currentIndex = -1;
 
         public GameTabs()
         {
@@ -28,7 +29,9 @@ namespace BedrockLauncher.Pages.Play
         {
             foreach (var button in pages.Keys) button.IsChecked = button == target;
             if (!created.TryGetValue(target, out Control page)) created[target] = page = pages[target]();
-            MainPageFrame.Content = page;
+            int index = System.Array.IndexOf(System.Linq.Enumerable.ToArray(pages.Keys), target);
+            BedrockLauncher.UI.PageAnimator.Navigate(MainPageFrame, page, currentIndex, index);
+            currentIndex = index;
         }
 
         public void NavigateToInstallations() => Navigate(InstallationsButton);

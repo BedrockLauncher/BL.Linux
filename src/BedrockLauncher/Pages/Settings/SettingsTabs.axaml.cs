@@ -10,6 +10,7 @@ namespace BedrockLauncher.Pages.Settings
     {
         private readonly Dictionary<ToggleButton, Func<Control>> pages;
         private readonly Dictionary<ToggleButton, Control> created = new();
+        private int currentIndex = -1;
 
         public SettingsTabs()
         {
@@ -29,7 +30,9 @@ namespace BedrockLauncher.Pages.Settings
         {
             foreach (var button in pages.Keys) button.IsChecked = button == target;
             if (!created.TryGetValue(target, out Control page)) created[target] = page = pages[target]();
-            SettingsScreenFrame.Content = page;
+            int index = System.Array.IndexOf(System.Linq.Enumerable.ToArray(pages.Keys), target);
+            BedrockLauncher.UI.PageAnimator.Navigate(SettingsScreenFrame, page, currentIndex, index);
+            currentIndex = index;
         }
 
         public void NavigateToLinux() => Navigate(LinuxButton);
