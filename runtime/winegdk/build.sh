@@ -17,6 +17,9 @@ SRC="${SRC:-$HOME/.cache/BedrockLauncher/winegdk-src}"
 JOBS="${JOBS:-$(nproc)}"
 WOW64="${WOW64:-1}"
 NO_DXVK="${NO_DXVK:-0}"
+# Same optimisation flags as GE-Proton's Makefile.in. WineGDK is Wine 11: ntsync is built in and used
+# automatically when the kernel has /dev/ntsync (6.14+), so no esync patches are needed here.
+OPT_CFLAGS="${OPT_CFLAGS:--O2 -march=nocona -mtune=core-avx2 -mfpmath=sse -fwrapv -fno-strict-aliasing}"
 
 log() { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 need() { command -v "$1" >/dev/null 2>&1 || { echo "missing build tool: $1" >&2; exit 1; }; }
@@ -39,7 +42,8 @@ cd "$SRC/build"
 if [ "$WOW64" = 1 ]; then archs="i386,x86_64"; else archs="x86_64"; fi
 if [ ! -f Makefile ] || [ "$SRC/configure" -nt Makefile ]; then
     log "Configuring (archs: $archs)"
-    "$SRC/configure" --prefix="$PREFIX" --enable-archs="$archs" --disable-tests ${CONFIGURE_ARGS:-}
+    "$SRC/configure" --prefix="$PREFIX" --enable-archs="$archs" --disable-tests \
+        CFLAGS="$OPT_CFLAGS" CROSSCFLAGS="$OPT_CFLAGS" ${CONFIGURE_ARGS:-}
 fi
 log "Building with $JOBS jobs (this takes a while)"
 make -j"$JOBS"

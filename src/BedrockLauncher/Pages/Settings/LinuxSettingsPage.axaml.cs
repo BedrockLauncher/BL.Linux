@@ -21,6 +21,7 @@ namespace BedrockLauncher.Pages.Settings
             GdkKind.SelectedIndex = s.GdkRuntimeKind == GameRuntimeKind.GdkProton ? 1 : 0;
             UseDxvk.IsChecked = s.UseDxvk;
             UseGameMode.IsChecked = s.UseGameMode;
+            UseFastSync.IsChecked = s.UseFastSync;
             UseMangoHud.IsChecked = s.UseMangoHud;
             WineDebug.Text = s.WineDebug;
             ExtraEnvironment.Text = s.ExtraEnvironment;
@@ -37,6 +38,7 @@ namespace BedrockLauncher.Pages.Settings
             s.GdkRuntimeKind = GdkKind.SelectedIndex == 1 ? GameRuntimeKind.GdkProton : GameRuntimeKind.WineGdk;
             s.UseDxvk = UseDxvk.IsChecked == true;
             s.UseGameMode = UseGameMode.IsChecked == true;
+            s.UseFastSync = UseFastSync.IsChecked == true;
             s.UseMangoHud = UseMangoHud.IsChecked == true;
             s.WineDebug = WineDebug.Text?.Trim() ?? string.Empty;
             s.ExtraEnvironment = ExtraEnvironment.Text ?? string.Empty;

@@ -131,6 +131,9 @@ namespace BedrockLauncher.Properties
         /// <summary>Use DXVK/vkd3d (Vulkan). Off falls back to wined3d (OpenGL).</summary>
         public bool UseDxvk { get; set; } = true;
 
+        /// <summary>esync / fsync / ntsync (the synchronization speed-ups GE-Proton enables).</summary>
+        public bool UseFastSync { get; set; } = true;
+
         /// <summary>Wrap the game with Feral GameMode's gamemoderun when it is installed.</summary>
         public bool UseGameMode { get; set; } = false;
 

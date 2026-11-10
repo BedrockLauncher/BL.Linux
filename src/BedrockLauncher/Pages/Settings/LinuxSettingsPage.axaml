@@ -63,6 +63,7 @@
 
             <TextBlock Margin="42,30,0,10" Text="{DynamicResource Linux_Settings_Graphics}" Classes="HeaderTextblock"/>
             <CheckBox x:Name="UseDxvk" Content="{DynamicResource Linux_Settings_UseDxvk}" Click="Option_Click"/>
+            <CheckBox x:Name="UseFastSync" Content="{DynamicResource Linux_Settings_FastSync}" Click="Option_Click"/>
             <CheckBox x:Name="UseGameMode" Content="{DynamicResource Linux_Settings_GameMode}" Click="Option_Click"/>
             <CheckBox x:Name="UseMangoHud" Content="{DynamicResource Linux_Settings_MangoHud}" Click="Option_Click"/>
             <TextBlock Margin="42,12,0,5" Text="{DynamicResource Linux_Settings_WineDebug}" Classes="HeaderTextblock"/>

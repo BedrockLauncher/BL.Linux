@@ -482,6 +482,8 @@ namespace BedrockLauncher.Handlers
                 GameDirectory = v.GameDirectory,
                 PackageDataPath = v.IsGdk ? null : dataPath,
                 UseDxvk = settings.UseDxvk,
+                UseFastSync = settings.UseFastSync,
+                ShaderCachePath = Directory.CreateDirectory(Path.Combine(Paths.CacheLocation, "shadercache", runtime.Kind.ToString().ToLowerInvariant())).FullName,
                 UseGameMode = settings.UseGameMode,
                 UseMangoHud = settings.UseMangoHud,
                 WineDebug = settings.WineDebug,
@@ -502,6 +504,8 @@ namespace BedrockLauncher.Handlers
                 }
                 command = Xodus.WrapRun(cli, command, v.GameDirectory, Constants.MINECRAFT_EXECUTABLE);
             }
+            if (settings.UseFastSync && !runtime.UsesProtonScript) command = LaunchCommandBuilder.WithRaisedFileLimit(command);
+            Trace.WriteLine(File.Exists("/dev/ntsync") ? "ntsync: available" : "ntsync: /dev/ntsync not present (kernel 6.14+ with the ntsync module); esync is used where the runtime has it");
             gameRuntime = runtime;
             gamePrefix = prefix;
 

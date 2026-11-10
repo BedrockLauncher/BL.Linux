@@ -127,5 +127,37 @@ namespace BedrockLauncher.Linux.Tests
         {
             Assert.Equal(@"Z:\home\a b\c", WinePath.ToWindows("/home/a b/c"));
         }
+    
+
+        [Fact]
+        public void Wine_runtimes_get_the_ge_proton_performance_environment()
+        {
+            using var dir = new TempDir();
+            var request = new LaunchRequest
+            {
+                Runtime = WineRuntime(dir, GameRuntimeKind.WineUwp),
+                PrefixPath = dir.Sub("prefix"),
+                GameDirectory = dir.Sub("game"),
+                ShaderCachePath = dir.Sub("cache"),
+                FindInPath = _ => null,
+            };
+            var command = LaunchCommandBuilder.Build(request);
+            Assert.Equal("1", command.Environment["WINEESYNC"]);
+            Assert.Equal("1", command.Environment["WINEFSYNC"]);
+            Assert.Equal("1", command.Environment["WINENTSYNC"]);
+            Assert.Equal("none", command.Environment["DXVK_LOG_LEVEL"]);
+            Assert.Equal(dir.Sub("cache"), command.Environment["DXVK_STATE_CACHE_PATH"]);
+            Assert.Equal(dir.Sub("cache"), command.Environment["MESA_SHADER_CACHE_DIR"]);
+
+            request.UseFastSync = false;
+            command = LaunchCommandBuilder.Build(request);
+            Assert.Equal("0", command.Environment["WINEESYNC"]);
+            Assert.False(command.Environment.ContainsKey("WINENTSYNC"));
+
+            var wrapped = LaunchCommandBuilder.WithRaisedFileLimit(command);
+            Assert.Equal("/bin/sh", wrapped.FileName);
+            Assert.Equal(command.FileName, wrapped.Arguments[3]);
+            Assert.Equal(command.Environment["WINEPREFIX"], wrapped.Environment["WINEPREFIX"]);
+        }
     }
 }

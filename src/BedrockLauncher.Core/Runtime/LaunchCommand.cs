@@ -59,6 +59,12 @@ namespace BedrockLauncher.Runtime
         public bool UseDxvk { get; set; } = true;
         public bool UseGameMode { get; set; }
         public bool UseMangoHud { get; set; }
+
+        /// <summary>Fast synchronization like GE-Proton: WINEESYNC / WINEFSYNC / WINENTSYNC (used when the runtime and kernel support them).</summary>
+        public bool UseFastSync { get; set; } = true;
+
+        /// <summary>Folder for the DXVK / vkd3d-proton / driver shader caches (kept across launches, per runtime).</summary>
+        public string ShaderCachePath { get; set; }
         public string WineDebug { get; set; }
         public string ExtraEnvironment { get; set; }
 
@@ -117,6 +123,31 @@ namespace BedrockLauncher.Runtime
             }
 
             command.Environment["WINEDEBUG"] = string.IsNullOrWhiteSpace(request.WineDebug) ? "-all" : request.WineDebug.Trim();
+
+            // The performance environment GE-Proton's "proton" script sets. Its own script already does this for
+            // GDK-Proton; plain wine runtimes (wine-uwp with the esync patches, WineGDK with ntsync) get it here.
+            if (!runtime.UsesProtonScript)
+            {
+                string sync = request.UseFastSync ? "1" : "0";
+                command.Environment["WINEESYNC"] = sync;
+                command.Environment["WINEFSYNC"] = sync;
+                if (request.UseFastSync) command.Environment["WINENTSYNC"] = "1";
+                if (string.IsNullOrWhiteSpace(request.WineDebug))
+                {
+                    command.Environment["DXVK_LOG_LEVEL"] = "none";
+                    command.Environment["VKD3D_DEBUG"] = "none";
+                    command.Environment["VKD3D_SHADER_DEBUG"] = "none";
+                }
+                if (!string.IsNullOrEmpty(request.ShaderCachePath))
+                {
+                    command.Environment["DXVK_STATE_CACHE_PATH"] = request.ShaderCachePath;
+                    command.Environment["VKD3D_SHADER_CACHE_PATH"] = request.ShaderCachePath;
+                    command.Environment["__GL_SHADER_DISK_CACHE"] = "1";
+                    command.Environment["__GL_SHADER_DISK_CACHE_PATH"] = request.ShaderCachePath;
+                    command.Environment["__GL_SHADER_DISK_CACHE_SKIP_CLEANUP"] = "1";
+                    command.Environment["MESA_SHADER_CACHE_DIR"] = request.ShaderCachePath;
+                }
+            }
             if (overrides.Count > 0) command.Environment["WINEDLLOVERRIDES"] = string.Join(";", overrides);
             if (request.UseMangoHud) command.Environment["MANGOHUD"] = "1";
 
@@ -139,6 +170,19 @@ namespace BedrockLauncher.Runtime
             }
 
             return command;
+        }
+
+        /// <summary>
+        /// esync uses one file descriptor per synchronization object, so the soft open-file limit is raised to the
+        /// hard limit before the game starts (Proton does the same with setrlimit).
+        /// </summary>
+        public static LaunchCommand WithRaisedFileLimit(LaunchCommand command)
+        {
+            var wrapped = new LaunchCommand { FileName = "/bin/sh", WorkingDirectory = command.WorkingDirectory };
+            wrapped.Arguments.AddRange(new[] { "-c", "ulimit -n \"$(ulimit -Hn)\" 2>/dev/null; exec \"$@\"", "sh", command.FileName });
+            wrapped.Arguments.AddRange(command.Arguments);
+            foreach (var pair in command.Environment) wrapped.Environment[pair.Key] = pair.Value;
+            return wrapped;
         }
 
         /// <summary>Parses NAME=value lines; blank lines and # comments are skipped.</summary>

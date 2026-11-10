@@ -22,6 +22,13 @@ SRC="${SRC:-$HOME/.cache/BedrockLauncher/wine-uwp-src}"
 JOBS="${JOBS:-$(nproc)}"
 WOW64="${WOW64:-1}"
 NO_DXVK="${NO_DXVK:-0}"
+# 1 = apply the esync (eventfd synchronization) patch set of wine-staging, the same code GE-Proton's wine carries.
+ESYNC="${ESYNC:-1}"
+STAGING_URL="${STAGING_URL:-https://github.com/wine-staging/wine-staging}"
+STAGING_TAG="${STAGING_TAG:-v9.16}"   # wine-uwp is based on Wine 9.16
+STAGING_SRC="${STAGING_SRC:-$HOME/.cache/BedrockLauncher/wine-staging-$STAGING_TAG}"
+# Same optimisation flags as GE-Proton's Makefile.in (x86_64_CFLAGS / CFLAGS).
+OPT_CFLAGS="${OPT_CFLAGS:--O2 -march=nocona -mtune=core-avx2 -mfpmath=sse -fwrapv -fno-strict-aliasing}"
 
 log() { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 need() { command -v "$1" >/dev/null 2>&1 || { echo "missing build tool: $1 (see runtime/wine-uwp/README.md)" >&2; exit 1; }; }
@@ -53,11 +60,25 @@ for patch in "$HERE"/patches/*.patch; do
     git apply --whitespace=nowarn "$patch"
 done
 shopt -u nullglob
+# esync: wineserver round trips for events/semaphores/mutexes become eventfd operations (what WINEESYNC=1 enables in
+# Proton). Only the patch sets it needs are taken; they apply cleanly on top of the fork.
+if [ "$ESYNC" = 1 ]; then
+    [ -d "$STAGING_SRC/.git" ] || git clone --quiet --depth 1 -b "$STAGING_TAG" "$STAGING_URL" "$STAGING_SRC"
+    for set in server-Realtime_Priority server-PeekMessage server-Signal_Thread eventfd_synchronization; do
+        log "  wine-staging $STAGING_TAG: $set"
+        for patch in "$STAGING_SRC/patches/$set"/*.patch; do
+            git apply --whitespace=nowarn "$patch"
+        done
+    done
+    tools/make_requests
+fi
+
 # Regenerate the makefile list from the tree. Upstream's configure.ac (and configure) still list
 # dlls/windows.storage.applicationdata, which is not in the repository, so a fresh clone does not configure
 # without this step. make_makefiles only sees files git knows about, hence the add.
 git add -A dlls programs include
 tools/make_makefiles
+autoconf --force && autoheader --force
 
 # --- wine -----------------------------------------------------------------------------------------------
 mkdir -p "$SRC/build/wine"
@@ -65,7 +86,8 @@ cd "$SRC/build/wine"
 if [ "$WOW64" = 1 ]; then archs="i386,x86_64"; else archs="x86_64"; fi
 if [ ! -f Makefile ] || [ "$SRC/configure" -nt Makefile ]; then
     log "Configuring wine-uwp (archs: $archs)"
-    "$SRC/configure" --prefix="$PREFIX" --enable-archs="$archs" --disable-tests ${CONFIGURE_ARGS:-}
+    "$SRC/configure" --prefix="$PREFIX" --enable-archs="$archs" --disable-tests \
+        CFLAGS="$OPT_CFLAGS" CROSSCFLAGS="$OPT_CFLAGS" ${CONFIGURE_ARGS:-}
 fi
 log "Building wine-uwp with $JOBS jobs (this takes a while)"
 make -j"$JOBS"
@@ -95,6 +117,7 @@ cat > "$PREFIX/bl-runtime.json" <<JSON
   "commit": "$COMMIT",
   "wow64": $([ "$WOW64" = 1 ] && echo true || echo false),
   "dxvk": $([ "$NO_DXVK" = 1 ] && echo false || echo true),
+  "esync": $([ "$ESYNC" = 1 ] && echo true || echo false),
   "built": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 JSON
