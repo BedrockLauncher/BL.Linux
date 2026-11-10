@@ -76,7 +76,7 @@ fi
 # Regenerate the makefile list from the tree. Upstream's configure.ac (and configure) still list
 # dlls/windows.storage.applicationdata, which is not in the repository, so a fresh clone does not configure
 # without this step. make_makefiles only sees files git knows about, hence the add.
-git add -A dlls programs include
+git add -A dlls programs include server
 tools/make_makefiles
 autoconf --force && autoheader --force
 
