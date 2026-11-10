@@ -1,35 +1,35 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="BedrockLauncher.Pages.Settings.AboutPage"
-             Background="#FF1F1F1F">
-    <ScrollViewer>
-        <StackPanel Margin="30,24,30,20" Spacing="14">
-            <Border Padding="24,20" Background="#FF282828" BorderBrush="#FF4A4A4A" BorderThickness="1">
-                <Grid ColumnDefinitions="Auto,*">
-                    <Image Source="avares://BedrockLauncher/Resources/images/logo/logo.png" Height="64" Margin="0,0,20,0"/>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="{DynamicResource AboutPage_Title}" Foreground="White" FontFamily="{StaticResource MinecraftTen}" FontSize="32"/>
-                        <TextBlock x:Name="BuildText" Foreground="{DynamicResource SecondaryText.Foreground}" FontSize="13"/>
-                    </StackPanel>
-                </Grid>
+             Background="{DynamicResource Background.Secondary}">
+    <!-- 1:1 with upstream AboutPage.xaml: founder card, TEAM grid, original developer, special thanks, build info -->
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="6,0,6,14" x:Name="Root">
+            <StackPanel.Styles>
+                <Style Selector="TextBlock.Section">
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="FontSize" Value="14"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Margin" Value="0,0,0,5"/>
+                </Style>
+            </StackPanel.Styles>
+            <ContentControl x:Name="Founder" Margin="0,0,0,14"/>
+            <TextBlock Text="TEAM" Classes="Section"/>
+            <UniformGrid Columns="2" Margin="-4,0,-4,10" x:Name="Team"/>
+            <TextBlock Text="{DynamicResource AboutPage_OriginallyDevelopedBy_Text}" Classes="Section"/>
+            <ContentControl x:Name="Original" Margin="0,0,0,10"/>
+            <TextBlock Text="{DynamicResource AboutPage_SpecialThanks_Text}" Classes="Section"/>
+            <UniformGrid Columns="2" Margin="-4,0,-4,10" x:Name="Thanks"/>
+            <TextBlock Text="LINUX" Classes="Section"/>
+            <UniformGrid Columns="2" Margin="-4,0,-4,10" x:Name="Linux"/>
+            <Border Background="#262626" Padding="10">
+                <StackPanel>
+                    <TextBlock Margin="0,5,0,0" Text="{DynamicResource GeneralSettingsScreen_UpdatesSubtitle}" Classes="HeaderTextblock"/>
+                    <TextBlock x:Name="BuildText" Margin="0,0,0,15" Foreground="White"/>
+                    <Button Margin="0,10,0,1" FontSize="14" Click="Releases_Click" Content="{DynamicResource LauncherNewsPage_CheckForUpdates}" Theme="{StaticResource LinkButton}"/>
+                    <TextBlock Margin="0,12,0,0" Text="{DynamicResource MainWindow_Disclaimer}" Classes="HeaderTextblock" Foreground="{DynamicResource SecondaryText.Foreground}"/>
+                </StackPanel>
             </Border>
-            <StackPanel Spacing="4">
-                <TextBlock Text="{DynamicResource AboutPage_DevelopedBy_Text}" Classes="HeaderTextblock"/>
-                <TextBlock Text="CarJem Generations, RaythNetwork and the BedrockLauncher contributors" Foreground="White"/>
-                <Button Theme="{StaticResource LinkButton}" Content="github.com/BedrockLauncher/BedrockLauncher" Click="Upstream_Click"/>
-            </StackPanel>
-            <StackPanel Spacing="4">
-                <TextBlock Text="Linux" Classes="HeaderTextblock"/>
-                <TextBlock Text="Avalonia port and Linux runtimes (wine-uwp for UWP builds, GDK-Proton / WineGDK for GDK builds)." Foreground="White" TextWrapping="Wrap"/>
-                <Button Theme="{StaticResource LinkButton}" Content="github.com/BedrockLauncher/BL.Linux" Click="Linux_Click"/>
-            </StackPanel>
-            <StackPanel Spacing="4">
-                <TextBlock Text="{DynamicResource AboutPage_SpecialThanks_Text}" Classes="HeaderTextblock"/>
-                <TextBlock Text="{DynamicResource AboutPage_McMrArm_Text}" Foreground="White" TextWrapping="Wrap"/>
-                <TextBlock Text="Rosentti/wine-uwp · Weather-OS/WineGDK · Weather-OS/GDK-Proton · MinecraftBedrockArchiver" Foreground="White" TextWrapping="Wrap"/>
-                <TextBlock Text="{DynamicResource AboutPage_Mojang_Text}" Foreground="White" TextWrapping="Wrap"/>
-            </StackPanel>
-            <TextBlock Text="{DynamicResource MainWindow_Disclaimer}" Classes="HeaderTextblock" Foreground="{DynamicResource SecondaryText.Foreground}"/>
         </StackPanel>
     </ScrollViewer>
 </UserControl>
