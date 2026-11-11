@@ -76,7 +76,10 @@
                         </Style>
                     </ListBox.Styles>
                 </ListBox>
-                <g:ResultPanel x:Name="NothingFound" PanelType="NoContent" IsVisible="False" Background="Transparent"/>
+                <StackPanel x:Name="NothingFound" IsVisible="False" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" Margin="30">
+                    <g:ResultPanel PanelType="NoContent" Background="Transparent" Height="150"/>
+                    <TextBlock x:Name="EmptyHint" Foreground="{DynamicResource SecondaryText.Foreground}" FontSize="13" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="560"/>
+                </StackPanel>
             </Panel>
         </Border>
     </Grid>

@@ -25,7 +25,10 @@ namespace BedrockLauncher.Pages.Settings
             MainDataModel.Default.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(MainDataModel.IsVersionsUpdating))
+                {
                     RefreshButton.IsEnabled = AddButton.IsEnabled = ImportGdkButton.IsEnabled = !MainDataModel.Default.IsVersionsUpdating;
+                    RefreshList();
+                }
             };
             MainDataModel.Default.ProgressBarState.PropertyChanged += (_, e) =>
             {
@@ -46,6 +49,16 @@ namespace BedrockLauncher.Pages.Settings
             var list = MainDataModel.Default.Versions.Where(FilterSortingHandler.Filter_VersionList).ToList();
             VersionsList.ItemsSource = list;
             NothingFound.IsVisible = list.Count == 0;
+            if (list.Count == 0)
+            {
+                // Only installed versions are listed here; say where the downloadable ones are.
+                int available = MainDataModel.Default.Versions.Count;
+                EmptyHint.Text = MainDataModel.Default.IsVersionsUpdating
+                    ? LanguageManager.GetResource("Linux_Versions_Loading")
+                    : available > 0
+                        ? string.Format(LanguageManager.GetResource("Linux_Versions_NoneInstalled"), available)
+                        : LanguageManager.GetResource("Linux_Versions_ListNotLoaded");
+            }
         }
 
         private void Filter_Click(object sender, RoutedEventArgs e)
