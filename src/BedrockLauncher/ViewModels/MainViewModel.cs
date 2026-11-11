@@ -118,8 +118,11 @@ namespace BedrockLauncher.ViewModels
         {
             if (ex is Exceptions.AccountRequiredException)
             {
-                // Offer the sign-in instead of a dead-end error.
-                var answer = await DialogPrompt.ShowDialog_YesNo(LanguageManager.GetResource("Linux_Account_Title"), ex.Message + "\n\n" + LanguageManager.GetResource("Linux_Account_SignIn") + "?");
+                // Offer the sign-in (or the license check) instead of a dead-end error.
+                bool signedIn = Accounts.AccountManager.Default.IsSignedIn;
+                var answer = await DialogPrompt.ShowDialog_YesNo(
+                    LanguageManager.GetResource(signedIn ? "Linux_Ownership_Title" : "Linux_Account_Title"),
+                    ex.Message + "\n\n" + (signedIn ? LanguageManager.GetResource("Linux_Account_OpenSettings") : LanguageManager.GetResource("Linux_Account_SignIn") + "?"));
                 if (answer == DialogResult.Yes)
                     Dispatcher.UIThread.Post(() => (MainWindow as BedrockLauncher.MainWindow)?.MainPage.NavigateToAccounts());
                 return;
