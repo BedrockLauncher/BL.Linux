@@ -36,6 +36,16 @@ namespace BedrockLauncher
 
         public override void OnFrameworkInitializationCompleted()
         {
+            // An exception that escapes an event handler (async void included) is logged and shown instead of
+            // closing the launcher.
+            Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) =>
+            {
+                System.Diagnostics.Trace.WriteLine($"Unhandled UI exception: {e.Exception}");
+                e.Handled = true;
+                try { _ = ViewModels.MainViewModel.Default.ShowException(e.Exception); }
+                catch (System.Exception ex) { System.Diagnostics.Trace.WriteLine($"Could not show it: {ex}"); }
+            };
+
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow = new MainWindow();

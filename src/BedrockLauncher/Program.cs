@@ -12,6 +12,12 @@ namespace BedrockLauncher
         public static void Main(string[] args)
         {
             StartLogging();
+            AppDomain.CurrentDomain.UnhandledException += (_, e) => Trace.WriteLine($"FATAL unhandled exception: {e.ExceptionObject}");
+            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (_, e) =>
+            {
+                Trace.WriteLine($"Unobserved task exception: {e.Exception}");
+                e.SetObserved();
+            };
             Trace.WriteLine($"Minecraft Bedrock Launcher for Linux {typeof(Program).Assembly.GetName().Version}");
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
