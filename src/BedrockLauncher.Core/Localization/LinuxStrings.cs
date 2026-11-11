@@ -56,6 +56,8 @@ namespace BedrockLauncher.Localization.Language
                 ["Linux_Account_CodeTitle"] = "Sign in with Microsoft",
                 ["Linux_Account_CodeText"] = "Open {0} in your browser and enter this code:",
                 ["Linux_Account_OpenBrowser"] = "Open browser",
+                ["Linux_Account_BrowserText"] = "Microsoft's sign-in page opened in your browser. Sign in there: the page comes back to the launcher by itself. If it did not open, press \"Open browser\"; to sign in from another device, use a code.",
+                ["Linux_Account_UseCode"] = "Use a code",
                 ["Linux_Account_CopyCode"] = "Copy code",
                 ["Linux_Account_Waiting"] = "Waiting for the sign-in to finish in the browser…",
                 ["Linux_XodusLoginRequired"] = "Sign in to Xodus (Settings > Accounts) to download GDK versions: Xodus downloads and licenses them with your Xbox account.",
@@ -68,8 +70,8 @@ namespace BedrockLauncher.Localization.Language
                 ["Linux_Xodus_SignedOut"] = "Not signed in to Xodus",
                 ["Linux_Xodus_SignIn"] = "Sign in to Xodus",
                 ["Linux_Xodus_Path"] = "xodus-cli (empty = detect automatically)",
-                ["Linux_Account_ClientId"] = "Application (client) ID of the launcher's Azure app",
-                ["Linux_Account_ClientIdHelp"] = "portal.azure.com > App registrations > New: \"Personal Microsoft accounts only\", then Authentication > Allow public client flows = Yes. Copy the Application (client) ID here.",
+                ["Linux_Account_ClientId"] = "Application (client) ID (empty = the launcher's own app)",
+                ["Linux_Account_ClientIdHelp"] = "Leave it empty to use Bedrock Launcher's app. To use your own: portal.azure.com > App registrations > New, \"Personal Microsoft accounts only\", redirect URI \"Mobile and desktop applications\" = http://localhost, Authentication > Allow public client flows = Yes.",
             },
             ["it-IT"] = new()
             {
@@ -120,6 +122,8 @@ namespace BedrockLauncher.Localization.Language
                 ["Linux_Account_CodeTitle"] = "Accedi con Microsoft",
                 ["Linux_Account_CodeText"] = "Apri {0} nel browser e inserisci questo codice:",
                 ["Linux_Account_OpenBrowser"] = "Apri browser",
+                ["Linux_Account_BrowserText"] = "La pagina di accesso Microsoft si è aperta nel browser. Accedi lì: la pagina torna al launcher da sola. Se non si è aperta premi \"Apri browser\"; per accedere da un altro dispositivo usa un codice.",
+                ["Linux_Account_UseCode"] = "Usa un codice",
                 ["Linux_Account_CopyCode"] = "Copia codice",
                 ["Linux_Account_Waiting"] = "In attesa che l'accesso finisca nel browser…",
                 ["Linux_XodusLoginRequired"] = "Accedi a Xodus (Impostazioni > Account) per scaricare le versioni GDK: Xodus le scarica e le licenzia con il tuo account Xbox.",
@@ -132,8 +136,8 @@ namespace BedrockLauncher.Localization.Language
                 ["Linux_Xodus_SignedOut"] = "Accesso a Xodus non effettuato",
                 ["Linux_Xodus_SignIn"] = "Accedi a Xodus",
                 ["Linux_Xodus_Path"] = "xodus-cli (vuoto = rilevamento automatico)",
-                ["Linux_Account_ClientId"] = "Application (client) ID dell'app Azure del launcher",
-                ["Linux_Account_ClientIdHelp"] = "portal.azure.com > Registrazioni app > Nuova: \"Solo account Microsoft personali\", poi Autenticazione > Consenti flussi client pubblici = Sì. Copia qui l'ID applicazione (client).",
+                ["Linux_Account_ClientId"] = "Application (client) ID (vuoto = l'app del launcher)",
+                ["Linux_Account_ClientIdHelp"] = "Lascialo vuoto per usare l'app di Bedrock Launcher. Per usarne una tua: portal.azure.com > Registrazioni app > Nuova, \"Solo account Microsoft personali\", URI di reindirizzamento \"Applicazioni per dispositivi mobili e desktop\" = http://localhost, Autenticazione > Consenti flussi client pubblici = Sì.",
             },
         };
     }

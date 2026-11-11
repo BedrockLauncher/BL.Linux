@@ -66,18 +66,36 @@ namespace BedrockLauncher.Accounts
 
         public static string StorePath => Path.Combine(ViewModels.MainDataModel.Default.FilePaths.ConfigLocation, "account.json");
 
+        /// <summary>
+        /// The launcher's Azure app registration ("Bedrock Launcher", personal Microsoft accounts, public client flows
+        /// on, redirect URI http://localhost for "Mobile and desktop applications"). A public client ID is not a secret.
+        /// </summary>
+        public const string DefaultClientId = "e2e40a45-c8e9-47ef-bf59-de46d75e5f86";
+
+        /// <summary>BL_MSA_CLIENT_ID, else the one set in Settings > Accounts, else <see cref="DefaultClientId"/>.</summary>
         public string ClientId
         {
             get
             {
                 string fromEnv = Environment.GetEnvironmentVariable("BL_MSA_CLIENT_ID");
-                return !string.IsNullOrWhiteSpace(fromEnv) ? fromEnv.Trim() : Properties.LauncherSettings.Default.MicrosoftClientId?.Trim();
+                if (!string.IsNullOrWhiteSpace(fromEnv)) return fromEnv.Trim();
+                string configured = Properties.LauncherSettings.Default.MicrosoftClientId?.Trim();
+                return string.IsNullOrEmpty(configured) ? DefaultClientId : configured;
             }
         }
 
+        /// <summary>Device code sign-in (type a code on microsoft.com/link).</summary>
         public async Task SignInAsync(Action<DeviceCodePrompt> prompt, CancellationToken cancellationToken)
         {
             Set(await authenticator.SignInAsync(ClientId, prompt, cancellationToken));
+            Save();
+            await VerifyOwnershipAsync(cancellationToken);
+        }
+
+        /// <summary>Browser sign-in: Microsoft's page redirects back to the launcher on http://localhost.</summary>
+        public async Task SignInWithBrowserAsync(Action<BrowserSignInPrompt> openBrowser, CancellationToken cancellationToken)
+        {
+            Set(await authenticator.SignInWithBrowserAsync(ClientId, openBrowser, cancellationToken));
             Save();
             await VerifyOwnershipAsync(cancellationToken);
         }
