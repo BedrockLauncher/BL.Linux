@@ -27,6 +27,8 @@ ESYNC="${ESYNC:-1}"
 STAGING_URL="${STAGING_URL:-https://github.com/wine-staging/wine-staging}"
 STAGING_TAG="${STAGING_TAG:-v9.16}"   # wine-uwp is based on Wine 9.16
 STAGING_SRC="${STAGING_SRC:-$HOME/.cache/BedrockLauncher/wine-staging-$STAGING_TAG}"
+# 1 = apply the GE-Proton wine hotfixes in runtime/ge-hotfixes (SRWLock, power status, xinput, wineserver).
+GE_HOTFIXES="${GE_HOTFIXES:-1}"
 # Same optimisation flags as GE-Proton's Makefile.in (x86_64_CFLAGS / CFLAGS).
 OPT_CFLAGS="${OPT_CFLAGS:--O2 -march=nocona -mtune=core-avx2 -mfpmath=sse -fwrapv -fno-strict-aliasing}"
 
@@ -71,6 +73,10 @@ if [ "$ESYNC" = 1 ]; then
         done
     done
     tools/make_requests
+fi
+if [ "$GE_HOTFIXES" = 1 ]; then
+    log "  GE-Proton wine hotfixes"
+    "$HERE/../ge-hotfixes/apply.sh"
 fi
 
 # Regenerate the makefile list from the tree. Upstream's configure.ac (and configure) still list

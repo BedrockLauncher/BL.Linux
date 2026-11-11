@@ -10,8 +10,10 @@
 #   NO_DXVK  1 = do not download DXVK / vkd3d-proton
 #   XODUS_INTEROP  1 = (default) build xgameruntime with Xodus interop: in-game Xbox sign-in (XUser) through
 #                  xodus-service, which the launcher starts before the game; 0 = upstream default (offline only)
+#   GE_HOTFIXES    1 = (default) apply the GE-Proton wine hotfixes in runtime/ge-hotfixes
 set -euo pipefail
 
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_URL="${REPO_URL:-https://github.com/Weather-OS/WineGDK}"
 REF="${REF:-main}"
 PREFIX="${PREFIX:-$HOME/.local/share/BedrockLauncher/runtimes/winegdk}"
@@ -20,6 +22,7 @@ JOBS="${JOBS:-$(nproc)}"
 WOW64="${WOW64:-1}"
 NO_DXVK="${NO_DXVK:-0}"
 XODUS_INTEROP="${XODUS_INTEROP:-1}"
+GE_HOTFIXES="${GE_HOTFIXES:-1}"
 # Same optimisation flags as GE-Proton's Makefile.in. WineGDK is Wine 11: ntsync is built in and used
 # automatically when the kernel has /dev/ntsync (6.14+), so no esync patches are needed here.
 OPT_CFLAGS="${OPT_CFLAGS:--O2 -march=nocona -mtune=core-avx2 -mfpmath=sse -fwrapv -fno-strict-aliasing}"
@@ -47,6 +50,10 @@ if [ "$XODUS_INTEROP" = 1 ]; then
     grep -q '#define XODUS_INTEROP 0' dlls/xgameruntime/private.h || { echo "XODUS_INTEROP switch not found in dlls/xgameruntime/private.h" >&2; exit 1; }
     sed -i 's/#define XODUS_INTEROP 0/#define XODUS_INTEROP 1/' dlls/xgameruntime/private.h
     log "Xodus interop: on (in-game Xbox sign-in through xodus-service)"
+fi
+if [ "$GE_HOTFIXES" = 1 ]; then
+    log "GE-Proton wine hotfixes"
+    "$HERE/../ge-hotfixes/apply.sh"
 fi
 
 mkdir -p "$SRC/build"
