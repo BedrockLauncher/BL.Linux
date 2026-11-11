@@ -19,8 +19,10 @@
                     <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center">
                         <TextBlock x:Name="StatusText" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
                         <TextBlock x:Name="XuidText" Foreground="{DynamicResource TertiaryText.Foreground}" FontSize="11"/>
+                        <TextBlock x:Name="OwnershipText" FontSize="12" FontWeight="SemiBold" Margin="0,4,0,0" TextWrapping="Wrap" MaxWidth="360"/>
                     </StackPanel>
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="VerifyButton" Content="{DynamicResource Linux_Ownership_Verify}" Theme="{StaticResource DialogButton}" Click="Verify_Click"/>
                         <Button x:Name="SignInButton" Content="{DynamicResource Linux_Account_SignIn}" Theme="{StaticResource DialogButton_Green}" Click="SignIn_Click"/>
                         <Button x:Name="SignOutButton" Content="{DynamicResource Linux_Account_SignOut}" Theme="{StaticResource DialogButton_Red}" Click="SignOut_Click"/>
                     </StackPanel>

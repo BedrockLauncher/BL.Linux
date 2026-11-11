@@ -29,6 +29,19 @@ namespace BedrockLauncher.Pages.Settings
             XuidText.Text = account.IsSignedIn ? "XUID " + account.Xuid : string.Empty;
             SignInButton.IsVisible = !account.IsSignedIn;
             SignOutButton.IsVisible = account.IsSignedIn;
+            VerifyButton.IsVisible = account.IsSignedIn;
+            VerifyButton.IsEnabled = !account.IsCheckingOwnership;
+            OwnershipText.IsVisible = account.IsSignedIn;
+            (string key, string color) = account.IsCheckingOwnership ? ("Linux_Ownership_Checking", "#FFB0B0B0") : account.Ownership switch
+            {
+                OwnershipState.Owned => ("Linux_Ownership_Owned", "#FF52A535"),
+                OwnershipState.NotOwned => ("Linux_Ownership_NotOwned", "#FFE14B4B"),
+                OwnershipState.Unverified => ("Linux_Ownership_Unverified", "#FFE8B33B"),
+                _ => ("Linux_Ownership_Checking", "#FFB0B0B0"),
+            };
+            OwnershipText.Text = LanguageManager.GetResource(key);
+            OwnershipText.Foreground = Avalonia.Media.Brush.Parse(color);
+            ToolTip.SetTip(OwnershipText, account.OwnershipDetails?.ToString());
 
             var settings = Properties.LauncherSettings.Default;
             string cli = Xodus.Locate(MainDataModel.Default.FilePaths.RuntimesFolder, settings.XodusPath);
@@ -58,6 +71,9 @@ namespace BedrockLauncher.Pages.Settings
             Properties.LauncherSettings.Default.Save();
             if (code != 0) await ErrorScreen.ShowMessage(LanguageManager.GetResource("Linux_Xodus_Title"), $"xodus-cli login exited with code {code}. See ~/.cache/BedrockLauncher/logs/launcher.log.");
             Update();
+            // The Xodus account can confirm the Store license when Minecraft services could not.
+            if (code == 0 && AccountManager.Default.IsSignedIn && !AccountManager.Default.OwnsMinecraft)
+                await AccountManager.Default.VerifyOwnershipAsync();
         }
 
         private async void XodusSignOut_Click(object sender, RoutedEventArgs e)
@@ -82,5 +98,12 @@ namespace BedrockLauncher.Pages.Settings
         }
 
         private void SignOut_Click(object sender, RoutedEventArgs e) => AccountManager.Default.SignOut();
+
+        private async void Verify_Click(object sender, RoutedEventArgs e)
+        {
+            await AccountManager.Default.VerifyOwnershipAsync();
+            string reason = AccountManager.Default.DownloadBlockReason;
+            if (reason != null) await ErrorScreen.ShowMessage(LanguageManager.GetResource("Linux_Ownership_Title"), LanguageManager.GetResource(reason));
+        }
     }
 }
