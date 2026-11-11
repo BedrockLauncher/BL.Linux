@@ -20,9 +20,10 @@ on:
 permissions:
   contents: write
 
+# A new run replaces one still in progress (only the newest scripts matter).
 concurrency:
   group: runtimes
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   RELEASE_TAG: runtimes
