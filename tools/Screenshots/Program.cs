@@ -101,6 +101,21 @@ public static class Screenshots
         MainDataModel.Default.ProgressBarState.SetProgressBarText("1.20.81.1 (Release) [UWP]");
         main.NavigateToGamePage();
         Shot("14-downloading");
+        MainDataModel.Default.ProgressBarState.SetProgressBarVisibility(false);
+
+        // Sign-in window against a stand-in Microsoft endpoint (BL_MSA_AUTHORITY): code shown, switch to the
+        // browser flow, cancel. Exercises the real dialog, so a crash in it fails this tool.
+        if (Environment.GetEnvironmentVariable("BL_MSA_AUTHORITY") != null)
+        {
+            Task<bool> signIn = SignInDialog.ShowAsync();
+            Shot("15-sign-in-code", 2);
+            var dialog = (SignInDialog)MainViewModel.Default.ErrorFrame_Content;
+            dialog.FindControl<Button>("UseBrowserButton").RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+            Shot("16-sign-in-browser", 2);
+            dialog.FindControl<Button>("CancelButton").RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+            Pump(TimeSpan.FromSeconds(2));
+            Console.WriteLine($"sign-in finished: {signIn.IsCompleted}, signed in: {(signIn.IsCompleted ? signIn.Result : (bool?)null)}");
+        }
         return 0;
     }
 

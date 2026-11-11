@@ -30,14 +30,15 @@ In [portal.azure.com](https://portal.azure.com) > **App registrations** > the ap
 | AADSTS7000218, `client_assertion or client_secret` | step 3: Allow public client flows = Yes |
 | AADSTS700016, `not enabled for consumers`, AADSTS9002331 | step 1: personal Microsoft accounts |
 
-Changes in Azure apply within a few minutes. Meanwhile "Use a code" in the sign-in window needs only step 3.
+Changes in Azure apply within a few minutes. The default code sign-in needs only step 3. Every sign-in error is
+written to `~/.cache/BedrockLauncher/logs/launcher.log` with Microsoft's own error text.
 
 ## How the sign-in works
 
 | Step | Endpoint |
 | --- | --- |
-| Browser sign-in (default) | `login.microsoftonline.com/consumers/oauth2/v2.0/authorize`, authorization code + PKCE, redirect to `http://localhost:<port>` |
-| Code sign-in (fallback) | `.../devicecode` then `.../token` |
+| Code sign-in (default) | `.../devicecode` then `.../token`: the code is copied and microsoft.com/link opens; needs step 3 only |
+| Browser sign-in ("Sign in with the browser instead") | `.../authorize`, authorization code + PKCE, redirect to `http://localhost:<port>`; needs step 2 |
 | Xbox Live | `user.auth.xboxlive.com` (RPS ticket `d=<token>`) then `xsts.auth.xboxlive.com` (gamertag, XUID) |
 | License check | `rp://api.minecraftservices.com/` XSTS > `login_with_xbox` > `entitlements/mcstore`; else the Store license through Xodus |
 

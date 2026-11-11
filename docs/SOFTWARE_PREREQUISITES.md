@@ -12,8 +12,8 @@
 
 A Microsoft account that owns Minecraft for Windows (Bedrock) is required to download or import versions
 (Settings > Accounts > Sign in with Microsoft). The launcher uses its own Azure app
-(`e2e40a45-c8e9-47ef-bf59-de46d75e5f86`): the sign-in opens Microsoft's page in the browser and comes back to the
-launcher by itself; "Use a code" signs in from another device. Azure setup: [MICROSOFT_LOGIN.md](MICROSOFT_LOGIN.md).
+(`e2e40a45-c8e9-47ef-bf59-de46d75e5f86`): the sign-in copies a code and opens microsoft.com/link; "Sign in with the
+browser instead" uses the http://localhost redirect and comes back to the launcher by itself. Azure setup: [MICROSOFT_LOGIN.md](MICROSOFT_LOGIN.md).
 
 ## Automatic runtimes
 
