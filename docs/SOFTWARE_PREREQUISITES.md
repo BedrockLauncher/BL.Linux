@@ -11,9 +11,18 @@
 | GDK downloads | [Xodus](https://github.com/xodus-gaming/xodus): Xbox sign-in, MSIXVC download and licensing | `runtime/xodus/build.sh`, then Settings > Accounts > Sign in to Xodus |
 
 A Microsoft account that owns Minecraft for Windows (Bedrock) is required to download or import versions
-(Settings > Accounts). The sign-in uses the launcher's own Azure app registration: create one at portal.azure.com
-(App registrations > New, "Personal Microsoft accounts only", Authentication > Allow public client flows = Yes) and
-paste its Application (client) ID in Settings > Accounts (or set `BL_MSA_CLIENT_ID`).
+(Settings > Accounts > Sign in with Microsoft). The launcher uses its own Azure app
+(`e2e40a45-c8e9-47ef-bf59-de46d75e5f86`): the sign-in opens Microsoft's page in the browser and comes back to the
+launcher by itself; "Use a code" signs in from another device. Azure setup: [MICROSOFT_LOGIN.md](MICROSOFT_LOGIN.md).
+
+## Automatic runtimes
+
+With Settings > Linux > "Download missing runtimes automatically" (on by default) the launcher downloads what a
+version needs the first time it is played: wine-uwp, WineGDK (or GDK-Proton) and Xodus. "Install / update runtimes"
+does it on demand. The list is `runtimes.json` on the BL.Linux `runtimes` release, built by
+`.github/workflows/runtimes.yml` from the scripts in `runtime/`; every archive is checked with SHA-256.
+The prebuilt runtimes are built on Ubuntu 24.04 and need glibc 2.39 or newer; Xodus also needs webkit2gtk 4.1,
+GTK 3 and a Secret Service keyring (GNOME Keyring / KWallet). On older systems build them with the scripts above.
 
 ## Minecraft license check
 
