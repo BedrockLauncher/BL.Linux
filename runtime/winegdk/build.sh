@@ -4,7 +4,7 @@
 #
 #   PREFIX   install location (default: ~/.local/share/BedrockLauncher/runtimes/winegdk)
 #   SRC      source checkout  (default: ~/.cache/BedrockLauncher/winegdk-src)
-#   REF      branch/commit    (default: main)
+#   REF      branch/commit    (default: master; WineGDK's "main" branch only holds a README)
 #   JOBS     parallel jobs    (default: nproc)
 #   WOW64    1 = new-style WoW64 (default), 0 = 64-bit only
 #   NO_DXVK  1 = do not download DXVK / vkd3d-proton
@@ -15,7 +15,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_URL="${REPO_URL:-https://github.com/Weather-OS/WineGDK}"
-REF="${REF:-main}"
+REF="${REF:-master}"
 PREFIX="${PREFIX:-$HOME/.local/share/BedrockLauncher/runtimes/winegdk}"
 SRC="${SRC:-$HOME/.cache/BedrockLauncher/winegdk-src}"
 JOBS="${JOBS:-$(nproc)}"
@@ -41,6 +41,7 @@ cd "$SRC"
 git fetch --quiet origin "$REF"
 git -c advice.detachedHead=false checkout --quiet --force FETCH_HEAD
 commit="$(git rev-parse HEAD)"
+[ -f VERSION ] && [ -d dlls/xgameruntime ] || { echo "$REPO_URL $REF does not look like a WineGDK tree (no VERSION or dlls/xgameruntime); set REF to the code branch (master)" >&2; exit 1; }
 log "WineGDK $commit ($(cat VERSION))"
 
 # Xodus interop ships disabled (private.h: #define XODUS_INTEROP 0). With it on, XUserAddAsync asks xodus-service
