@@ -47,6 +47,14 @@
                 </Grid>
             </ContentControl>
 
+            <TextBlock Margin="42,30,0,0" Text="{DynamicResource Linux_Settings_AutoTitle}" Classes="HeaderTextblock"/>
+            <TextBlock Margin="42,5,0,10" Text="{DynamicResource Linux_Settings_AutoText}" Classes="Text"/>
+            <CheckBox x:Name="AutoInstallRuntimes" Content="{DynamicResource Linux_Settings_AutoInstall}" Click="Option_Click"/>
+            <StackPanel Orientation="Horizontal" Margin="38,0,0,0">
+                <Button x:Name="InstallRuntimesButton" Content="{DynamicResource Linux_Settings_InstallRuntimes}" Click="InstallRuntimes_Click" Theme="{StaticResource DialogButton_Green}"/>
+            </StackPanel>
+            <TextBlock x:Name="InstallReport" Margin="42,8,0,0" Classes="Text" FontFamily="monospace" IsVisible="False"/>
+
             <TextBlock Margin="42,30,0,5" Text="{DynamicResource Linux_Settings_Detected}" Classes="HeaderTextblock"/>
             <ItemsControl x:Name="DetectedList" Margin="42,0,0,0">
                 <ItemsControl.ItemTemplate>

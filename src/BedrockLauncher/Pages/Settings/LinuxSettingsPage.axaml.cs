@@ -19,6 +19,7 @@ namespace BedrockLauncher.Pages.Settings
             UwpPath.Text = s.UwpRuntimePath;
             GdkPath.Text = s.GdkRuntimePath;
             GdkKind.SelectedIndex = s.GdkRuntimeKind == GameRuntimeKind.GdkProton ? 1 : 0;
+            AutoInstallRuntimes.IsChecked = s.AutoInstallRuntimes;
             UseDxvk.IsChecked = s.UseDxvk;
             UseGameMode.IsChecked = s.UseGameMode;
             UseFastSync.IsChecked = s.UseFastSync;
@@ -36,6 +37,7 @@ namespace BedrockLauncher.Pages.Settings
             s.UwpRuntimePath = UwpPath.Text?.Trim() ?? string.Empty;
             s.GdkRuntimePath = GdkPath.Text?.Trim() ?? string.Empty;
             s.GdkRuntimeKind = GdkKind.SelectedIndex == 1 ? GameRuntimeKind.GdkProton : GameRuntimeKind.WineGdk;
+            s.AutoInstallRuntimes = AutoInstallRuntimes.IsChecked == true;
             s.UseDxvk = UseDxvk.IsChecked == true;
             s.UseGameMode = UseGameMode.IsChecked == true;
             s.UseFastSync = UseFastSync.IsChecked == true;
@@ -57,6 +59,22 @@ namespace BedrockLauncher.Pages.Settings
         private void Option_Click(object sender, RoutedEventArgs e) => Save();
         private void GdkKind_SelectionChanged(object sender, SelectionChangedEventArgs e) => Save();
         private void Detect_Click(object sender, RoutedEventArgs e) => Detect();
+
+        private async void InstallRuntimes_Click(object sender, RoutedEventArgs e)
+        {
+            InstallRuntimesButton.IsEnabled = false;
+            try
+            {
+                var report = await MainDataModel.Default.PackageManager.InstallOrUpdateRuntimes();
+                InstallReport.Text = string.Join("\n", report);
+                InstallReport.IsVisible = report.Count > 0;
+                Detect();
+            }
+            finally
+            {
+                InstallRuntimesButton.IsEnabled = true;
+            }
+        }
 
         private async void BrowseUwp_Click(object sender, RoutedEventArgs e)
         {
