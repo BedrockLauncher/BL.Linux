@@ -132,7 +132,7 @@ namespace BedrockLauncher.Accounts
                 if (error != null)
                     throw error == "access_denied"
                         ? new XboxAccountException("The sign-in was declined.")
-                        : new XboxAccountException($"Microsoft sign-in failed: {error} {query["error_description"]}");
+                        : new XboxAccountException(DescribeAadError(error, query["error_description"]) ?? $"Microsoft sign-in failed: {error} {query["error_description"]}");
                 if (query["state"] != state) throw new XboxAccountException("The sign-in answer did not match this sign-in (state). Try again.");
 
                 JObject token = await PostFormAsync($"{Authority}/token", new Dictionary<string, string>
@@ -212,7 +212,7 @@ namespace BedrockLauncher.Accounts
                 if (error == "slow_down") { interval += 5; continue; }
                 if (error == "authorization_declined") throw new XboxAccountException("The sign-in was declined.");
                 if (error == "expired_token") throw new XboxAccountException("The sign-in code expired. Start the sign-in again.");
-                throw new XboxAccountException($"Microsoft sign-in failed: {error} {(string)token["error_description"]}");
+                throw new XboxAccountException(DescribeAadError(error, (string)token["error_description"]) ?? $"Microsoft sign-in failed: {error} {(string)token["error_description"]}");
             }
         }
 
@@ -281,6 +281,19 @@ namespace BedrockLauncher.Accounts
             _ => $"Xbox Live refused the sign-in (XErr {xerr}).",
         };
 
+        /// <summary>Turns the Azure app configuration errors Microsoft returns into what to change in the app.</summary>
+        public static string DescribeAadError(string error, string description)
+        {
+            string text = (error ?? "") + " " + (description ?? "");
+            if (text.Contains("AADSTS7000218") || text.Contains("client_assertion") || text.Contains("client_secret"))
+                return "The Azure app does not allow public client flows. In portal.azure.com > App registrations > the app > Authentication, set \"Allow public client flows\" to Yes.";
+            if (text.Contains("AADSTS700016") || text.Contains("not enabled for consumers") || text.Contains("AADSTS50020") || text.Contains("AADSTS9002331"))
+                return "The Azure app does not accept personal Microsoft accounts. In portal.azure.com > App registrations > the app > Manifest, set \"signInAudience\" to \"PersonalMicrosoftAccount\" (and \"requestedAccessTokenVersion\" to 2).";
+            if (text.Contains("AADSTS50011") || text.Contains("redirect_uri"))
+                return "The Azure app has no http://localhost redirect URI. In portal.azure.com > App registrations > the app > Authentication > Add a platform > Mobile and desktop applications, add http://localhost.";
+            return null;
+        }
+
         private static void RequireClientId(string clientId)
         {
             if (string.IsNullOrWhiteSpace(clientId))
@@ -293,7 +306,8 @@ namespace BedrockLauncher.Accounts
             string body = await response.Content.ReadAsStringAsync(cancellationToken);
             JObject json = ParseObject(body);
             if (!response.IsSuccessStatusCode && !(allowError && json?["error"] != null))
-                throw new XboxAccountException($"Microsoft sign-in failed ({(int)response.StatusCode}): {(string)json?["error_description"] ?? body}");
+                throw new XboxAccountException(DescribeAadError((string)json?["error"], (string)json?["error_description"])
+                    ?? $"Microsoft sign-in failed ({(int)response.StatusCode}): {(string)json?["error_description"] ?? body}");
             return json ?? new JObject();
         }
 
