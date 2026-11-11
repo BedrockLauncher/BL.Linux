@@ -8,6 +8,8 @@
 #   JOBS     parallel jobs    (default: nproc)
 #   WOW64    1 = new-style WoW64 (default), 0 = 64-bit only
 #   NO_DXVK  1 = do not download DXVK / vkd3d-proton
+#   XODUS_INTEROP  1 = (default) build xgameruntime with Xodus interop: in-game Xbox sign-in (XUser) through
+#                  xodus-service, which the launcher starts before the game; 0 = upstream default (offline only)
 set -euo pipefail
 
 REPO_URL="${REPO_URL:-https://github.com/Weather-OS/WineGDK}"
@@ -17,6 +19,7 @@ SRC="${SRC:-$HOME/.cache/BedrockLauncher/winegdk-src}"
 JOBS="${JOBS:-$(nproc)}"
 WOW64="${WOW64:-1}"
 NO_DXVK="${NO_DXVK:-0}"
+XODUS_INTEROP="${XODUS_INTEROP:-1}"
 # Same optimisation flags as GE-Proton's Makefile.in. WineGDK is Wine 11: ntsync is built in and used
 # automatically when the kernel has /dev/ntsync (6.14+), so no esync patches are needed here.
 OPT_CFLAGS="${OPT_CFLAGS:--O2 -march=nocona -mtune=core-avx2 -mfpmath=sse -fwrapv -fno-strict-aliasing}"
@@ -36,6 +39,15 @@ git fetch --quiet origin "$REF"
 git -c advice.detachedHead=false checkout --quiet --force FETCH_HEAD
 commit="$(git rev-parse HEAD)"
 log "WineGDK $commit ($(cat VERSION))"
+
+# Xodus interop ships disabled (private.h: #define XODUS_INTEROP 0). With it on, XUserAddAsync asks xodus-service
+# (over $XDG_RUNTIME_DIR/xodus.sock) for the MSA token of the signed-in Xodus account, so the game signs in to
+# Xbox Live and can go online. xgameruntime then needs xodus-service running, or the game's runtime init fails.
+if [ "$XODUS_INTEROP" = 1 ]; then
+    grep -q '#define XODUS_INTEROP 0' dlls/xgameruntime/private.h || { echo "XODUS_INTEROP switch not found in dlls/xgameruntime/private.h" >&2; exit 1; }
+    sed -i 's/#define XODUS_INTEROP 0/#define XODUS_INTEROP 1/' dlls/xgameruntime/private.h
+    log "Xodus interop: on (in-game Xbox sign-in through xodus-service)"
+fi
 
 mkdir -p "$SRC/build"
 cd "$SRC/build"
@@ -84,6 +96,7 @@ cat > "$PREFIX/bl-runtime.json" <<JSON
   "commit": "$commit",
   "wow64": $([ "$WOW64" = 1 ] && echo true || echo false),
   "dxvk": $([ "$NO_DXVK" = 1 ] && echo false || echo true),
+  "xodusInterop": $([ "$XODUS_INTEROP" = 1 ] && echo true || echo false),
   "built": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 JSON
