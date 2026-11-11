@@ -11,8 +11,8 @@ on:
   workflow_dispatch:
     inputs:
       winegdk_ref:
-        description: WineGDK branch or commit
-        default: main
+        description: WineGDK branch or commit (the code is on master)
+        default: master
       xodus_ref:
         description: Xodus branch or commit
         default: main
@@ -106,17 +106,27 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: gdk-proton, path: dist/, retention-days: 3 }
 
+  # Publishes whatever was built: one failing runtime does not hold back the others. A runtime that failed keeps
+  # its previous archive on the release, and its previous entry in runtimes.json.
   publish:
     needs: [wine-uwp, winegdk, xodus, gdk-proton]
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { path: dist, merge-multiple: true }
       - name: Write runtimes.json
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          mkdir -p dist previous
+          ls dist/*.entry.json >/dev/null 2>&1 || { echo "::error::no runtime was built"; exit 1; }
           base="https://github.com/${{ github.repository }}/releases/download/$RELEASE_TAG"
-          python3 runtime/make-manifest.py dist "$base" > dist/runtimes.json
+          # Keep the entries of runtimes that did not build this time.
+          gh release download "$RELEASE_TAG" -p runtimes.json -D previous 2>/dev/null || true
+          python3 runtime/make-manifest.py dist "$base" previous/runtimes.json > runtimes.json
+          mv runtimes.json dist/runtimes.json
           cat dist/runtimes.json
       - name: Upload to the "runtimes" release
         env:
@@ -125,5 +135,5 @@ jobs:
           gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --title "Runtimes" \
             --notes "Runtimes downloaded by BL.Linux (Settings > Linux > automatic runtimes). Built by .github/workflows/runtimes.yml." --latest=false
           # Archives first, the list last: a launcher never sees a runtimes.json pointing at missing files.
-          gh release upload "$RELEASE_TAG" dist/*.tar.xz --clobber
+          if ls dist/*.tar.xz >/dev/null 2>&1; then gh release upload "$RELEASE_TAG" dist/*.tar.xz --clobber; fi
           gh release upload "$RELEASE_TAG" dist/runtimes.json --clobber

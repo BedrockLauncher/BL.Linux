@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Joins the *.entry.json files written by package.sh (and gdk-proton/entry.sh) into runtimes.json.
 
-    make-manifest.py <dir with entries> <release download base URL> > runtimes.json
+    make-manifest.py <dir with entries> <release download base URL> [previous runtimes.json] > runtimes.json
 
 Entries with a "file" are hosted on the release (url = base/file); entries with a "url" point elsewhere
-(GDK-Proton's own release)."""
+(GDK-Proton's own release). Runtimes of the previous runtimes.json that were not built this time are kept."""
 import datetime, glob, json, os, sys
 
 folder, base = sys.argv[1], sys.argv[2].rstrip("/")
@@ -19,6 +19,9 @@ for path in sorted(glob.glob(os.path.join(folder, "*.entry.json"))):
         if not entry.get(key):
             sys.exit(f"{path}: missing {key}")
     runtimes.append(entry)
+if len(sys.argv) > 3 and os.path.exists(sys.argv[3]):
+    built = {e["id"] for e in runtimes}
+    runtimes += [e for e in json.load(open(sys.argv[3])).get("runtimes", []) if e.get("id") not in built]
 runtimes.sort(key=lambda e: order.get(e["id"], 99))
 json.dump({"format": 1, "generated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
            "runtimes": runtimes}, sys.stdout, indent=2)
