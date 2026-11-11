@@ -65,7 +65,9 @@ namespace BedrockLauncher.Accounts
     {
         public const string Scope = "XboxLive.signin offline_access";
         public const string LoopbackRedirectBase = "http://localhost";
-        private const string Authority = "https://login.microsoftonline.com/consumers/oauth2/v2.0";
+        /// <summary>Microsoft identity platform, consumer accounts. BL_MSA_AUTHORITY replaces it in UI tests only.</summary>
+        private static string Authority =>
+            Environment.GetEnvironmentVariable("BL_MSA_AUTHORITY") ?? "https://login.microsoftonline.com/consumers/oauth2/v2.0";
 
         private readonly HttpClient http;
 
@@ -100,7 +102,12 @@ namespace BedrockLauncher.Accounts
             listener.Start();
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeout.CancelAfter(BrowserTimeout);
-            using var stop = timeout.Token.Register(() => { try { listener.Stop(); } catch (ObjectDisposedException) { } });
+            // Stop() can throw from inside CancellationTokenSource.Cancel() (UI thread); never let that escape.
+            using var stop = timeout.Token.Register(() =>
+            {
+                try { listener.Stop(); }
+                catch (Exception ex) { System.Diagnostics.Trace.WriteLine($"Browser sign-in listener stop: {ex.Message}"); }
+            });
 
             openBrowser?.Invoke(new BrowserSignInPrompt { AuthorizeUrl = authorizeUrl, RedirectUri = redirectUri });
 
@@ -284,13 +291,19 @@ namespace BedrockLauncher.Accounts
         /// <summary>Turns the Azure app configuration errors Microsoft returns into what to change in the app.</summary>
         public static string DescribeAadError(string error, string description)
         {
+            string hint = AadHint(error, description);
+            return hint == null ? null : $"{hint}\n\nMicrosoft: {error} {description}".TrimEnd();
+        }
+
+        private static string AadHint(string error, string description)
+        {
             string text = (error ?? "") + " " + (description ?? "");
             if (text.Contains("AADSTS7000218") || text.Contains("client_assertion") || text.Contains("client_secret"))
                 return "The Azure app does not allow public client flows. In portal.azure.com > App registrations > the app > Authentication, set \"Allow public client flows\" to Yes.";
             if (text.Contains("AADSTS700016") || text.Contains("not enabled for consumers") || text.Contains("AADSTS50020") || text.Contains("AADSTS9002331"))
                 return "The Azure app does not accept personal Microsoft accounts. In portal.azure.com > App registrations > the app > Manifest, set \"signInAudience\" to \"PersonalMicrosoftAccount\" (and \"requestedAccessTokenVersion\" to 2).";
             if (text.Contains("AADSTS50011") || text.Contains("redirect_uri"))
-                return "The Azure app has no http://localhost redirect URI. In portal.azure.com > App registrations > the app > Authentication > Add a platform > Mobile and desktop applications, add http://localhost.";
+                return "Microsoft did not accept the redirect URI http://localhost:<port>. It has to be registered under \"Mobile and desktop applications\" (not \"Web\" or \"Single-page application\", where the port must match exactly): portal.azure.com > App registrations > the app > Authentication. Until then, sign in with a code.";
             return null;
         }
 
