@@ -15,8 +15,9 @@ print(release["tag_name"], assets[0]["browser_download_url"] if assets else "")'
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 curl -fsSL -o "$tmp/a" "$url"
 sha="$(sha256sum "$tmp/a" | cut -d' ' -f1)"; size="$(stat -c %s "$tmp/a")"
-folder="$(tar -tf "$tmp/a" | head -1 | cut -d/ -f1)"
-[ -n "$folder" ] && tar -tf "$tmp/a" | grep -q "^$folder/proton$" || { echo "unexpected layout in $url" >&2; exit 1; }
+tar -tf "$tmp/a" > "$tmp/list"   # listed once into a file: "tar | head" fails under pipefail (SIGPIPE)
+folder="$(sed -n '1s|/.*||p' "$tmp/list")"
+[ -n "$folder" ] && grep -qx "$folder/proton" "$tmp/list" || { echo "unexpected layout in $url" >&2; exit 1; }
 python3 -I - "$out/gdk-proton.entry.json" "$tag" "$url" "$sha" "$size" "$folder" <<'PY'
 import json, sys
 path, tag, url, sha, size, folder = sys.argv[1:]
