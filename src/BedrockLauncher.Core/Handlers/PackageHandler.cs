@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -43,6 +44,11 @@ namespace BedrockLauncher.Handlers
         private static ProgressBarModel Progress => MainDataModel.Default.ProgressBarState;
 
         public RuntimeLocator Locator => new RuntimeLocator(Paths.RuntimesFolder);
+
+        /// <summary>Test hook: the HttpClient the runtime installer downloads with.</summary>
+        public System.Net.Http.HttpClient RuntimeHttp { get; set; }
+
+        public RuntimeInstaller Installer => new RuntimeInstaller(Paths.RuntimesFolder, Paths.DownloadsFolder, RuntimeHttp, Runner);
 
         #region Public Methods
 
@@ -343,8 +349,13 @@ namespace BedrockLauncher.Handlers
 
             // With Xodus the package is downloaded from the catalog (Rayth's GdkLinks) and licensed with the user's
             // Xbox account; without it the files have to come from a Windows install.
-            string cli = XodusCli;
             string[] urls = (GdkUrlResolver ?? VersionDownloader.GetGdkDownloadUrls)(v);
+            string cli = XodusCli;
+            if (cli == null && urls.Length > 0)
+            {
+                RequireAccount();
+                cli = await TryInstallXodus();
+            }
             if (cli != null && urls.Length > 0)
             {
                 await DownloadGdkWithXodus(cli, v, urls);
@@ -462,8 +473,7 @@ namespace BedrockLauncher.Handlers
             GameRuntimeKind kind = v.IsGdk ? settings.GdkRuntimeKind : GameRuntimeKind.WineUwp;
             string configured = v.IsGdk ? settings.GdkRuntimePath : settings.UwpRuntimePath;
 
-            GameRuntime runtime = Locator.Resolve(kind, configured) ?? throw new RuntimeNotFoundException(string.Format(
-                LanguageManager.GetResource(v.IsGdk ? "Linux_GdkRuntimeMissing" : "Linux_UwpRuntimeMissing"), Paths.RuntimesFolder));
+            GameRuntime runtime = await ResolveOrInstallRuntime(kind, configured, v.IsGdk ? "Linux_GdkRuntimeMissing" : "Linux_UwpRuntimeMissing");
 
             Trace.WriteLine($"Runtime: {runtime}");
             string prefix = WinePrefixManager.GetPrefixPath(Paths.PrefixesFolder, runtime);
@@ -495,7 +505,7 @@ namespace BedrockLauncher.Handlers
             if (v.IsGdk && Xodus.IsXodusInstall(v.GameDirectory))
             {
                 // Installed through Xodus: the executable is still encrypted; xodus-cli licenses and decrypts it.
-                string cli = XodusCli ?? throw new RuntimeNotFoundException(LanguageManager.GetResource("Linux_XodusMissing"));
+                string cli = XodusCli ?? await TryInstallXodus() ?? throw new RuntimeNotFoundException(LanguageManager.GetResource("Linux_XodusMissing"));
                 if (runtime.UsesProtonScript)
                 {
                     request.Runtime = new GameRuntime { Kind = GameRuntimeKind.WineGdk, Name = runtime.Name, RootPath = runtime.RootPath, Origin = runtime.Origin };
@@ -508,7 +518,7 @@ namespace BedrockLauncher.Handlers
             {
                 // WineGDK with Xodus interop: xgameruntime gets the Xbox Live sign-in from xodus-service and does not
                 // start without it.
-                string service = XodusService.Locate(XodusCli);
+                string service = XodusService.Locate(XodusCli ?? await TryInstallXodus());
                 if (!await XodusService.Default.EnsureRunningAsync(service, Runner, Log, CancelSource.Token))
                     throw new RuntimeNotFoundException(LanguageManager.GetResource("Linux_XodusServiceMissing"));
                 command.Environment["XDG_RUNTIME_DIR"] = XodusService.RuntimeDirectory;
@@ -522,6 +532,103 @@ namespace BedrockLauncher.Handlers
             Process process = Runner.Start(command, GameLog());
             Trace.WriteLine($"Launch: OK (process {process.Id})");
             return process;
+        }
+
+        /// <summary>The runtime for a kind; when none is found it is downloaded (Settings > Linux > automatic runtimes).</summary>
+        private async Task<GameRuntime> ResolveOrInstallRuntime(GameRuntimeKind kind, string configured, string missingResource)
+        {
+            GameRuntime runtime = Locator.Resolve(kind, configured);
+            if (runtime != null) return runtime;
+            string missing = string.Format(LanguageManager.GetResource(missingResource), Paths.RuntimesFolder);
+            if (!string.IsNullOrWhiteSpace(configured) || !LauncherSettings.Default.AutoInstallRuntimes)
+                throw new RuntimeNotFoundException(missing);
+
+            try
+            {
+                RuntimeManifest manifest = await Installer.GetManifestAsync(CancelSource.Token);
+                RuntimePackage package = manifest.For(kind) ?? throw new RuntimeInstallException($"The runtime list has no {kind} build.");
+                await InstallRuntimePackage(package);
+            }
+            catch (RuntimeInstallException ex)
+            {
+                throw new RuntimeNotFoundException(missing + "\n\n" + string.Format(LanguageManager.GetResource("Linux_RuntimeAutoInstallFailed"), ex.Message));
+            }
+            return Locator.Resolve(kind, configured) ?? throw new RuntimeNotFoundException(missing);
+        }
+
+        /// <summary>Downloads xodus-cli + xodus-service; null (and the reason in the log) when that is not possible.</summary>
+        private async Task<string> TryInstallXodus()
+        {
+            if (!LauncherSettings.Default.AutoInstallRuntimes || !string.IsNullOrWhiteSpace(LauncherSettings.Default.XodusPath)) return null;
+            try
+            {
+                RuntimeManifest manifest = await Installer.GetManifestAsync(CancelSource.Token);
+                RuntimePackage package = manifest.Xodus ?? throw new RuntimeInstallException("The runtime list has no Xodus build.");
+                await InstallRuntimePackage(package);
+            }
+            catch (RuntimeInstallException ex)
+            {
+                Trace.WriteLine($"Xodus could not be installed automatically: {ex.Message}");
+                return null;
+            }
+            return XodusCli;
+        }
+
+        /// <summary>
+        /// Settings > Linux: installs or updates the runtimes the launcher uses (wine-uwp, the selected GDK runtime,
+        /// Xodus). Returns one line per package.
+        /// </summary>
+        public async Task<List<string>> InstallOrUpdateRuntimes()
+        {
+            var report = new List<string>();
+            try
+            {
+                StartTask();
+                RuntimeManifest manifest = await Installer.GetManifestAsync(CancelSource.Token);
+                var wanted = new[] { manifest.For(GameRuntimeKind.WineUwp), manifest.For(LauncherSettings.Default.GdkRuntimeKind), manifest.Xodus };
+                foreach (RuntimePackage package in wanted.Where(p => p != null))
+                {
+                    if (Installer.IsUpToDate(package))
+                    {
+                        report.Add($"{package.Id} {package.Version}: {LanguageManager.GetResource("Linux_RuntimeUpToDate")}");
+                        continue;
+                    }
+                    await InstallRuntimePackage(package);
+                    report.Add($"{package.Id} {package.Version}: {LanguageManager.GetResource("Linux_RuntimeInstalled")}");
+                }
+            }
+            catch (RuntimeInstallException ex)
+            {
+                report.Add(ex.Message);
+            }
+            catch (OperationCanceledException)
+            {
+                report.Add(LanguageManager.GetResource("Linux_RuntimeCancelled"));
+            }
+            finally
+            {
+                EndTask();
+            }
+            return report;
+        }
+
+        /// <summary>Installs one runtime package with the launcher's progress bar.</summary>
+        public async Task InstallRuntimePackage(RuntimePackage package)
+        {
+            string previousText = Progress.Information;
+            Progress.SetProgressBarState(LauncherState.isDownloading);
+            Progress.SetProgressBarText(string.Format(LanguageManager.GetResource("Linux_RuntimeDownloading"), package.Id, package.Version));
+            Progress.AllowCancel = true;
+            try
+            {
+                await Installer.InstallAsync(package, (done, total) => Progress.SetProgressBarProgress(done, total), Log, CancelSource.Token);
+            }
+            finally
+            {
+                Progress.AllowCancel = false;
+                Progress.ResetProgressBarProgress();
+                Progress.SetProgressBarText(previousText);
+            }
         }
 
         private async Task RedirectGdkSaveData(GameRuntime runtime, string prefix, VersionType type, string dataPath)

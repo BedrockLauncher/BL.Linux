@@ -119,6 +119,9 @@ namespace BedrockLauncher.Properties
 
         #region Linux runtime settings
 
+        /// <summary>Download missing runtimes (wine-uwp, WineGDK, GDK-Proton, Xodus) from the BL.Linux releases when needed.</summary>
+        public bool AutoInstallRuntimes { get; set; } = true;
+
         /// <summary>wine-uwp install folder (holds bin/wine); empty = auto-detect.</summary>
         public string UwpRuntimePath { get; set; } = "";
 
