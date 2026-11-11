@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +21,13 @@ namespace BedrockLauncher.Accounts
         public string VerificationUri { get; init; }
         public string Message { get; init; }
         public DateTime ExpiresAt { get; init; }
+    }
+
+    /// <summary>The Microsoft sign-in page the user has to open for a browser sign-in.</summary>
+    public sealed class BrowserSignInPrompt
+    {
+        public string AuthorizeUrl { get; init; }
+        public string RedirectUri { get; init; }
     }
 
     public sealed class XboxAccountException : Exception
@@ -45,19 +55,124 @@ namespace BedrockLauncher.Accounts
     /// Microsoft account + Xbox Live sign-in, the same chain Minecraft uses:
     /// Microsoft identity platform (device code flow, consumer accounts, scope XboxLive.signin)
     /// -> user.auth.xboxlive.com (user token) -> xsts.auth.xboxlive.com (XSTS token, gamertag, XUID).
-    /// The OAuth client is the launcher's own Azure app registration (Settings > Accounts).
+    /// The OAuth client is the launcher's Azure app registration (<see cref="AccountManager.DefaultClientId"/>).
+    /// Two ways to sign in:
+    ///   browser: authorization code + PKCE with a loopback redirect (http://localhost:&lt;port&gt;), the page returns
+    ///            to the launcher by itself. Needs "http://localhost" as a "Mobile and desktop applications" redirect URI.
+    ///   code:    device code flow (type a code on microsoft.com/link), for when no browser can reach localhost.
     /// </summary>
     public sealed class XboxAuthenticator
     {
         public const string Scope = "XboxLive.signin offline_access";
+        public const string LoopbackRedirectBase = "http://localhost";
         private const string Authority = "https://login.microsoftonline.com/consumers/oauth2/v2.0";
 
         private readonly HttpClient http;
+
+        /// <summary>How long a browser sign-in may take before it gives up.</summary>
+        public TimeSpan BrowserTimeout { get; set; } = TimeSpan.FromMinutes(5);
 
         public XboxAuthenticator(HttpClient http = null)
         {
             this.http = http ?? new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
         }
+
+        /// <summary>
+        /// Browser sign-in: listens on a free localhost port, hands the Microsoft sign-in URL to
+        /// <paramref name="openBrowser"/> and waits for Microsoft to redirect back with the authorization code.
+        /// </summary>
+        public async Task<StoredAccount> SignInWithBrowserAsync(string clientId, Action<BrowserSignInPrompt> openBrowser, CancellationToken cancellationToken)
+        {
+            RequireClientId(clientId);
+            int port = FreeLoopbackPort();
+            string redirectUri = $"{LoopbackRedirectBase}:{port}";
+            string verifier = Base64Url(RandomNumberGenerator.GetBytes(32));
+            string challenge = Base64Url(SHA256.HashData(Encoding.ASCII.GetBytes(verifier)));
+            string state = Base64Url(RandomNumberGenerator.GetBytes(16));
+
+            string authorizeUrl = $"{Authority}/authorize?client_id={Uri.EscapeDataString(clientId)}&response_type=code" +
+                $"&redirect_uri={Uri.EscapeDataString(redirectUri)}&response_mode=query&scope={Uri.EscapeDataString(Scope)}" +
+                $"&code_challenge={challenge}&code_challenge_method=S256&state={state}&prompt=select_account";
+
+            using var listener = new HttpListener();
+            listener.Prefixes.Add($"http://localhost:{port}/");
+            listener.Prefixes.Add($"http://127.0.0.1:{port}/");
+            listener.Start();
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(BrowserTimeout);
+            using var stop = timeout.Token.Register(() => { try { listener.Stop(); } catch (ObjectDisposedException) { } });
+
+            openBrowser?.Invoke(new BrowserSignInPrompt { AuthorizeUrl = authorizeUrl, RedirectUri = redirectUri });
+
+            while (true)
+            {
+                HttpListenerContext context;
+                try
+                {
+                    context = await listener.GetContextAsync();
+                }
+                catch (Exception ex) when (ex is HttpListenerException || ex is ObjectDisposedException || ex is InvalidOperationException)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    throw new XboxAccountException("The browser sign-in timed out. Start the sign-in again.");
+                }
+
+                var query = System.Web.HttpUtility.ParseQueryString(context.Request.Url?.Query ?? "");
+                string code = query["code"], error = query["error"];
+                if (code == null && error == null)
+                {
+                    // favicon.ico and similar requests
+                    context.Response.StatusCode = 404;
+                    context.Response.Close();
+                    continue;
+                }
+
+                bool ok = error == null && query["state"] == state;
+                await Reply(context, ok);
+                if (error != null)
+                    throw error == "access_denied"
+                        ? new XboxAccountException("The sign-in was declined.")
+                        : new XboxAccountException($"Microsoft sign-in failed: {error} {query["error_description"]}");
+                if (query["state"] != state) throw new XboxAccountException("The sign-in answer did not match this sign-in (state). Try again.");
+
+                JObject token = await PostFormAsync($"{Authority}/token", new Dictionary<string, string>
+                {
+                    ["grant_type"] = "authorization_code",
+                    ["client_id"] = clientId,
+                    ["code"] = code,
+                    ["redirect_uri"] = redirectUri,
+                    ["code_verifier"] = verifier,
+                    ["scope"] = Scope,
+                }, cancellationToken);
+                return await CompleteAsync(clientId, token, cancellationToken);
+            }
+        }
+
+        private static async Task Reply(HttpListenerContext context, bool ok)
+        {
+            string title = ok ? "Signed in / Accesso effettuato" : "Sign-in failed / Accesso non riuscito";
+            string text = ok ? "You can close this tab and go back to Bedrock Launcher.<br>Puoi chiudere questa scheda e tornare a Bedrock Launcher."
+                             : "Go back to Bedrock Launcher and try again.<br>Torna a Bedrock Launcher e riprova.";
+            byte[] body = Encoding.UTF8.GetBytes($"<!doctype html><meta charset=utf-8><title>Bedrock Launcher</title>" +
+                $"<body style=\"background:#1f1f1f;color:#fff;font-family:sans-serif;text-align:center;padding-top:15vh\">" +
+                $"<h1>{title}</h1><p>{text}</p></body>");
+            context.Response.ContentType = "text/html; charset=utf-8";
+            context.Response.ContentLength64 = body.Length;
+            await context.Response.OutputStream.WriteAsync(body);
+            context.Response.Close();
+        }
+
+        private static int FreeLoopbackPort()
+        {
+            var probe = new TcpListener(IPAddress.Loopback, 0);
+            probe.Start();
+            int port = ((IPEndPoint)probe.LocalEndpoint).Port;
+            probe.Stop();
+            return port;
+        }
+
+        private static string Base64Url(byte[] data) =>
+            Convert.ToBase64String(data).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
         /// <summary>Full interactive sign-in: shows the code through <paramref name="prompt"/> and waits for the user.</summary>
         public async Task<StoredAccount> SignInAsync(string clientId, Action<DeviceCodePrompt> prompt, CancellationToken cancellationToken)
@@ -169,7 +284,7 @@ namespace BedrockLauncher.Accounts
         private static void RequireClientId(string clientId)
         {
             if (string.IsNullOrWhiteSpace(clientId))
-                throw new XboxAccountException("No Microsoft client ID is set. Register an app in Azure (personal Microsoft accounts, public client flows on) and enter its Application (client) ID in Settings > Accounts.");
+                throw new XboxAccountException("No Microsoft client ID is set. Clear the field in Settings > Accounts to use the launcher's own app, or enter the Application (client) ID of your Azure app.");
         }
 
         private async Task<JObject> PostFormAsync(string url, Dictionary<string, string> form, CancellationToken cancellationToken, bool allowError = false)
