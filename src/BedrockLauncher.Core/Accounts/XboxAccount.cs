@@ -34,6 +34,11 @@ namespace BedrockLauncher.Accounts
         public string RefreshToken { get; set; }
         public string ClientId { get; set; }
         public DateTime SignedInAt { get; set; }
+        /// <summary>Last Minecraft Bedrock ownership answer, kept so an offline start still knows it.</summary>
+        public OwnershipResult Ownership { get; set; }
+
+        /// <summary>user.auth.xboxlive.com token of this session (short-lived, never written to disk).</summary>
+        [JsonIgnore] public string XboxUserToken { get; set; }
     }
 
     /// <summary>
@@ -146,6 +151,7 @@ namespace BedrockLauncher.Accounts
                 RefreshToken = (string)msaToken["refresh_token"],
                 ClientId = clientId,
                 SignedInAt = DateTime.UtcNow,
+                XboxUserToken = (string)user["Token"],
             };
         }
 

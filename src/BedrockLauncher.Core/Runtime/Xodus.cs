@@ -10,6 +10,7 @@ namespace BedrockLauncher.Runtime
     /// The launcher drives its CLI:
     ///   xodus-cli login                              sign in (opens Microsoft's login page)
     ///   xodus-cli streaming &lt;msixvc url&gt; &lt;folder&gt;    download + extract with the account's license
+    ///   xodus-cli license &lt;content id&gt; &lt;folder&gt;  Store license check (ownership)
     ///   xodus-cli run &lt;folder&gt; &lt;wine&gt; --exe X.exe    license + on-demand decryption, then starts the game
     /// A folder installed this way keeps the package in <see cref="StreamingPackageName"/>; its executables stay
     /// encrypted on disk and are only decrypted (into memory) by "xodus-cli run".
@@ -39,6 +40,13 @@ namespace BedrockLauncher.Runtime
         public static LaunchCommand Login(string cli) => Command(cli, "login");
 
         public static LaunchCommand Logout(string cli) => Command(cli, "logout");
+
+        /// <summary>
+        /// "xodus-cli license &lt;content id&gt; &lt;folder&gt;": fetches the account's Store content license for the game
+        /// (fails with "not entitled" when the account does not own it) and writes its content keys to the folder.
+        /// </summary>
+        public static LaunchCommand License(string cli, string contentId, string keyFolder) =>
+            Command(cli, "license", contentId, keyFolder);
 
         public static LaunchCommand Streaming(string cli, string source, string destination)
         {
