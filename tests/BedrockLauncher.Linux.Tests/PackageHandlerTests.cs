@@ -43,6 +43,7 @@ namespace BedrockLauncher.Linux.Tests
             Environment.SetEnvironmentVariable("BL_SKIP_ACCOUNT_CHECK", "1");
             Environment.SetEnvironmentVariable("XODUS_CLI", null);
             Properties.LauncherSettings.Load();
+            Properties.LauncherSettings.Default.AutoInstallRuntimes = false;
             MainDataModel.Default.PackageManager.GdkUrlResolver = _ => Array.Empty<string>();
             MainDataModel.Default.UiHost = ui;
             MainDataModel.Default.Versions.Clear();
@@ -55,6 +56,7 @@ namespace BedrockLauncher.Linux.Tests
             Environment.SetEnvironmentVariable("BL_SKIP_ACCOUNT_CHECK", null);
             Environment.SetEnvironmentVariable("XODUS_CLI", null);
             MainDataModel.Default.PackageManager.GdkUrlResolver = null;
+            MainDataModel.Default.PackageManager.RuntimeHttp = null;
             dir.Dispose();
         }
 
@@ -151,6 +153,68 @@ namespace BedrockLauncher.Linux.Tests
             Assert.Equal(Path.Combine(version.GameDirectory, "Minecraft.Windows.exe"), launch[0]);
             Assert.Equal(WinePath.ToWindows(data), launch[1]);
             Assert.Equal(version.GameDirectory, launch[2]);
+        }
+
+        [Fact]
+        public async Task Missing_wine_uwp_is_downloaded_from_the_runtime_list_before_the_launch()
+        {
+            // The release archive: runtimes/wine-uwp with a stand-in wine and its descriptor.
+            string src = dir.Sub("release", "wine-uwp");
+            Script(Path.Combine(src, "bin", "wine64"),
+                "if [ \"$1\" = wineboot ]; then touch \"$WINEPREFIX/system.reg\"; exit 0; fi\n" +
+                "if [ \"$1\" = reg ]; then exit 0; fi\n" +
+                "printf '%s\\n' \"$*\" > \"$WINEPREFIX/launch.log\"\n");
+            Script(Path.Combine(src, "bin", "wineserver"), "exit 0\n");
+            File.WriteAllText(Path.Combine(src, "bl-runtime.json"), "{\"kind\":\"WineUwp\",\"name\":\"wine-uwp\"}");
+            string archive = dir.Sub("release", "wine-uwp-x86_64.tar.xz");
+            var tar = Process.Start("tar", new[] { "-cJf", archive, "-C", dir.Sub("release"), "wine-uwp" });
+            tar.WaitForExit();
+            var server = new RuntimeServerStub(archive, "wine-uwp", "WineUwp");
+            MainDataModel.Default.PackageManager.RuntimeHttp = new System.Net.Http.HttpClient(server);
+            Properties.LauncherSettings.Default.AutoInstallRuntimes = true;
+            Properties.LauncherSettings.Default.UwpRuntimePath = "";
+
+            var version = new MCVersion("uwp-auto", "uwp-auto", "1.20.81.1", VersionType.Release, "x64");
+            MainDataModel.Default.Versions.Add(version);
+            Directory.CreateDirectory(version.GameDirectory);
+            File.WriteAllText(Path.Combine(version.GameDirectory, "AppxManifest.xml"), "<Package/>");
+            File.WriteAllText(Path.Combine(version.GameDirectory, "Minecraft.Windows.exe"), "MZ");
+            File.WriteAllText(version.IdentificationPath, "uwp-auto");
+
+            await MainDataModel.Default.PackageManager.Play(null, version, dir.Sub("installation", "data"), keepLauncherOpen: true, launchEditor: false);
+            Assert.Null(ui.Error);
+
+            string installed = Path.Combine(MainDataModel.Default.FilePaths.RuntimesFolder, "wine-uwp");
+            Assert.True(File.Exists(Path.Combine(installed, "bin", "wine64")));
+            Assert.Contains("\"version\": \"test-1\"", File.ReadAllText(Path.Combine(installed, RuntimeInstaller.MarkerFile)));
+            Assert.Equal(new[] { RuntimeInstaller.DefaultManifestUrl, "https://example.invalid/runtimes/wine-uwp-x86_64.tar.xz" }, server.Requests);
+            string prefix = Path.Combine(MainDataModel.Default.FilePaths.PrefixesFolder, "wineuwp");
+            await WaitFor(() => File.Exists(Path.Combine(prefix, "launch.log")));
+            Assert.StartsWith(Path.Combine(version.GameDirectory, "Minecraft.Windows.exe"), File.ReadAllText(Path.Combine(prefix, "launch.log")));
+        }
+
+        /// <summary>Serves runtimes.json and one archive, like the BL.Linux "runtimes" release.</summary>
+        internal sealed class RuntimeServerStub : System.Net.Http.HttpMessageHandler
+        {
+            private readonly byte[] archive;
+            private readonly string manifest;
+            public readonly System.Collections.Generic.List<string> Requests = new();
+
+            public RuntimeServerStub(string archivePath, string folder, string kind, string sha256 = null)
+            {
+                archive = File.ReadAllBytes(archivePath);
+                sha256 ??= Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(archive)).ToLowerInvariant();
+                manifest = "{\"format\":1,\"runtimes\":[{\"id\":\"" + folder + "\",\"kind\":\"" + kind + "\",\"version\":\"test-1\",\"folder\":\"" + folder +
+                    "\",\"url\":\"https://example.invalid/runtimes/" + Path.GetFileName(archivePath) + "\",\"sha256\":\"" + sha256 + "\",\"size\":" + archive.Length + "}]}";
+            }
+
+            protected override Task<System.Net.Http.HttpResponseMessage> SendAsync(System.Net.Http.HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
+            {
+                string url = request.RequestUri.ToString();
+                Requests.Add(url);
+                var content = url.EndsWith("runtimes.json") ? (System.Net.Http.HttpContent)new System.Net.Http.StringContent(manifest) : new System.Net.Http.ByteArrayContent(archive);
+                return Task.FromResult(new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = content });
+            }
         }
 
         [Fact]
