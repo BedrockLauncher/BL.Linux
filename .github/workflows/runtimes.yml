@@ -1,0 +1,129 @@
+# Builds the runtimes the launcher downloads by itself (Settings > Linux > automatic runtimes) and publishes them,
+# with runtimes.json, on the "runtimes" release:
+#   wine-uwp   runtime/wine-uwp/build.sh   Rosentti/wine-uwp + BL.Linux patches, esync, GE-Proton hotfixes, dxvk-uwp
+#   winegdk    runtime/winegdk/build.sh    Weather-OS/WineGDK + Xodus interop + GE-Proton hotfixes, DXVK, vkd3d-proton
+#   xodus      runtime/xodus/build.sh      xodus-cli + xodus-service
+#   gdk-proton runtime/gdk-proton/entry.sh the latest Weather-OS/GDK-Proton release (linked, not re-hosted)
+# Run it from Actions > Runtimes > Run workflow.
+name: Runtimes
+
+on:
+  workflow_dispatch:
+    inputs:
+      winegdk_ref:
+        description: WineGDK branch or commit
+        default: main
+      xodus_ref:
+        description: Xodus branch or commit
+        default: main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: runtimes
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: runtimes
+  WINE_DEPS: >-
+    gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 gcc-mingw-w64-i686 g++-mingw-w64-i686 flex bison autoconf make gcc
+    pkg-config libx11-dev libxext-dev libxrandr-dev libxi-dev libxcursor-dev libxcomposite-dev libxfixes-dev
+    libxinerama-dev libxrender-dev libfreetype-dev libfontconfig-dev libvulkan-dev libgnutls28-dev libpulse-dev
+    libasound2-dev libwayland-dev libxkbcommon-dev libegl-dev libgl-dev libgstreamer1.0-dev
+    libgstreamer-plugins-base1.0-dev libsdl2-dev libudev-dev libdbus-1-dev libusb-1.0-0-dev libpcap-dev
+    libkrb5-dev libcups2-dev libv4l-dev meson ninja-build glslang-tools python3 curl xz-utils zstd
+
+jobs:
+  wine-uwp:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends $WINE_DEPS
+      - name: Build wine-uwp
+        run: PREFIX="$RUNNER_TEMP/out/wine-uwp" SRC="$RUNNER_TEMP/src/wine-uwp" STAGING_SRC="$RUNNER_TEMP/src/wine-staging" runtime/wine-uwp/build.sh
+      - name: Package
+        run: |
+          commit="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["commit"][:8])' "$RUNNER_TEMP/out/wine-uwp/bl-runtime.json")"
+          runtime/package.sh wine-uwp WineUwp "$RUNNER_TEMP/out/wine-uwp" dist "$commit-r${{ github.run_number }}" \
+            "Rosentti/wine-uwp + BL.Linux patches (UWP versions)"
+      - uses: actions/upload-artifact@v4
+        with: { name: wine-uwp, path: dist/, retention-days: 3 }
+
+  winegdk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends $WINE_DEPS
+      - name: Build WineGDK
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REF: ${{ inputs.winegdk_ref }}
+        run: PREFIX="$RUNNER_TEMP/out/winegdk" SRC="$RUNNER_TEMP/src/winegdk" runtime/winegdk/build.sh
+      - name: Package
+        run: |
+          commit="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["commit"][:8])' "$RUNNER_TEMP/out/winegdk/bl-runtime.json")"
+          runtime/package.sh winegdk WineGdk "$RUNNER_TEMP/out/winegdk" dist "$commit-r${{ github.run_number }}" \
+            "Weather-OS/WineGDK + Xodus interop + GE-Proton hotfixes (GDK versions)"
+      - uses: actions/upload-artifact@v4
+        with: { name: winegdk, path: dist/, retention-days: 3 }
+
+  xodus:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends protobuf-compiler pkg-config libssl-dev libdbus-1-dev \
+            libgtk-3-dev libwebkit2gtk-4.1-dev libsoup-3.0-dev libxdo-dev xz-utils
+          rustup toolchain install stable --profile minimal && rustup default stable
+      - name: Build Xodus
+        env:
+          REF: ${{ inputs.xodus_ref }}
+        run: PREFIX="$RUNNER_TEMP/out/xodus" SRC="$RUNNER_TEMP/src/xodus" runtime/xodus/build.sh
+      - name: Package
+        run: |
+          test -x "$RUNNER_TEMP/out/xodus/xodus-service"
+          runtime/package.sh xodus Xodus "$RUNNER_TEMP/out/xodus" dist "$(cut -c1-8 "$RUNNER_TEMP/out/xodus/commit")-r${{ github.run_number }}" \
+            "xodus-gaming/xodus: xodus-cli + xodus-service (needs webkit2gtk 4.1 and a keyring)"
+      - uses: actions/upload-artifact@v4
+        with: { name: xodus, path: dist/, retention-days: 3 }
+
+  gdk-proton:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Link the latest GDK-Proton release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: runtime/gdk-proton/entry.sh dist
+      - uses: actions/upload-artifact@v4
+        with: { name: gdk-proton, path: dist/, retention-days: 3 }
+
+  publish:
+    needs: [wine-uwp, winegdk, xodus, gdk-proton]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: dist, merge-multiple: true }
+      - name: Write runtimes.json
+        run: |
+          base="https://github.com/${{ github.repository }}/releases/download/$RELEASE_TAG"
+          python3 runtime/make-manifest.py dist "$base" > dist/runtimes.json
+          cat dist/runtimes.json
+      - name: Upload to the "runtimes" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --title "Runtimes" \
+            --notes "Runtimes downloaded by BL.Linux (Settings > Linux > automatic runtimes). Built by .github/workflows/runtimes.yml." --latest=false
+          # Archives first, the list last: a launcher never sees a runtimes.json pointing at missing files.
+          gh release upload "$RELEASE_TAG" dist/*.tar.xz --clobber
+          gh release upload "$RELEASE_TAG" dist/runtimes.json --clobber
