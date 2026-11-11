@@ -75,7 +75,8 @@ if [ "$NO_DXVK" != 1 ]; then
     tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
     fetch_release() { # repo, pattern -> extracted folder
         local url
-        url="$(curl -fsSL "https://api.github.com/repos/$1/releases/latest" | python3 -c '
+        local auth=(); [ -n "${GITHUB_TOKEN:-}" ] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
+        url="$(curl -fsSL "${auth[@]}" "https://api.github.com/repos/$1/releases/latest" | python3 -c '
 import json, sys
 pat = sys.argv[1]
 print(next((a["browser_download_url"] for a in json.load(sys.stdin)["assets"] if a["name"].endswith(pat)), ""))' "$2")"
