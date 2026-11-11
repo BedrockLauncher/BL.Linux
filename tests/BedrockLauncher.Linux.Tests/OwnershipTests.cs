@@ -173,6 +173,17 @@ namespace BedrockLauncher.Linux.Tests
         }
 
         [Fact]
+        public void The_launchers_own_azure_app_is_the_default_client()
+        {
+            Environment.SetEnvironmentVariable("BL_MSA_CLIENT_ID", null);
+            Properties.LauncherSettings.Default.MicrosoftClientId = "";
+            Assert.Equal("e2e40a45-c8e9-47ef-bf59-de46d75e5f86", new AccountManager().ClientId);
+            Properties.LauncherSettings.Default.MicrosoftClientId = " my-own-app ";
+            Assert.Equal("my-own-app", new AccountManager().ClientId);
+            Properties.LauncherSettings.Default.MicrosoftClientId = "";
+        }
+
+        [Fact]
         public async Task Signed_out_accounts_may_not_download()
         {
             var (manager, _) = Manager("{\"items\":[]}");

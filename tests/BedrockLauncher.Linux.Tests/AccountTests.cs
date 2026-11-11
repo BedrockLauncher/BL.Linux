@@ -74,5 +74,67 @@ namespace BedrockLauncher.Linux.Tests
             var ex = await Assert.ThrowsAsync<XboxAccountException>(() => auth.SignInAsync("", null, CancellationToken.None));
             Assert.Contains("Azure", ex.Message);
         }
+    
+        [Fact]
+        public async Task Browser_sign_in_comes_back_on_localhost_with_pkce()
+        {
+            var services = new FakeServices();
+            var auth = new XboxAuthenticator(new HttpClient(services));
+            BrowserSignInPrompt shown = null;
+            using var browser = new HttpClient();
+
+            StoredAccount account = await auth.SignInWithBrowserAsync("11111111-2222-3333-4444-555555555555", prompt =>
+            {
+                shown = prompt;
+                var query = System.Web.HttpUtility.ParseQueryString(new Uri(prompt.AuthorizeUrl).Query);
+                // What Microsoft does after the user signs in: redirect to the loopback address with the code.
+                _ = Task.Run(async () =>
+                {
+                    await browser.GetAsync(prompt.RedirectUri + "/favicon.ico");
+                    await browser.GetAsync($"{prompt.RedirectUri}/?code=AUTHCODE&state={query["state"]}");
+                });
+            }, CancellationToken.None);
+
+            var authorize = System.Web.HttpUtility.ParseQueryString(new Uri(shown.AuthorizeUrl).Query);
+            Assert.StartsWith("https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?", shown.AuthorizeUrl);
+            Assert.Equal("S256", authorize["code_challenge_method"]);
+            Assert.Equal(shown.RedirectUri, authorize["redirect_uri"]);
+            Assert.Matches(@"^http://localhost:\d+$", shown.RedirectUri);
+            Assert.Equal("XboxLive.signin offline_access", authorize["scope"]);
+            Assert.Equal("Steve2026", account.Gamertag);
+
+            string tokenCall = services.Calls.Single(c => c.Contains("/token "));
+            var form = System.Web.HttpUtility.ParseQueryString(tokenCall.Substring(tokenCall.IndexOf(' ') + 1));
+            Assert.Equal("authorization_code", form["grant_type"]);
+            Assert.Equal("AUTHCODE", form["code"]);
+            Assert.Equal(shown.RedirectUri, form["redirect_uri"]);
+            // The verifier must hash to the challenge sent to /authorize.
+            string challenge = Convert.ToBase64String(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.ASCII.GetBytes(form["code_verifier"])))
+                .TrimEnd('=').Replace('+', '-').Replace('/', '_');
+            Assert.Equal(authorize["code_challenge"], challenge);
+        }
+
+        [Fact]
+        public async Task Browser_sign_in_rejects_a_foreign_state_and_reports_a_decline()
+        {
+            var auth = new XboxAuthenticator(new HttpClient(new FakeServices()));
+            using var browser = new HttpClient();
+
+            var wrong = await Assert.ThrowsAsync<XboxAccountException>(() => auth.SignInWithBrowserAsync("id", p =>
+                _ = Task.Run(() => browser.GetAsync($"{p.RedirectUri}/?code=X&state=forged")), CancellationToken.None));
+            Assert.Contains("state", wrong.Message);
+
+            var declined = await Assert.ThrowsAsync<XboxAccountException>(() => auth.SignInWithBrowserAsync("id", p =>
+                _ = Task.Run(() => browser.GetAsync($"{p.RedirectUri}/?error=access_denied")), CancellationToken.None));
+            Assert.Contains("declined", declined.Message);
+        }
+
+        [Fact]
+        public async Task Browser_sign_in_can_be_cancelled()
+        {
+            var auth = new XboxAuthenticator(new HttpClient(new FakeServices()));
+            using var cancel = new CancellationTokenSource();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => auth.SignInWithBrowserAsync("id", _ => cancel.CancelAfter(200), cancel.Token));
+        }
     }
 }
