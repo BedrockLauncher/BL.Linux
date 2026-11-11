@@ -538,6 +538,9 @@ namespace BedrockLauncher.Handlers
         private async Task<GameRuntime> ResolveOrInstallRuntime(GameRuntimeKind kind, string configured, string missingResource)
         {
             GameRuntime runtime = Locator.Resolve(kind, configured);
+            // GDK versions also run on GDK-Proton (installed instead when WineGDK was not available).
+            if (runtime == null && kind == GameRuntimeKind.WineGdk && string.IsNullOrWhiteSpace(configured))
+                runtime = Locator.Resolve(GameRuntimeKind.GdkProton, null);
             if (runtime != null) return runtime;
             string missing = string.Format(LanguageManager.GetResource(missingResource), Paths.RuntimesFolder);
             if (!string.IsNullOrWhiteSpace(configured) || !LauncherSettings.Default.AutoInstallRuntimes)
@@ -546,8 +549,15 @@ namespace BedrockLauncher.Handlers
             try
             {
                 RuntimeManifest manifest = await Installer.GetManifestAsync(CancelSource.Token);
-                RuntimePackage package = manifest.For(kind) ?? throw new RuntimeInstallException($"The runtime list has no {kind} build.");
+                // WineGDK not published (yet): GDK-Proton runs GDK versions too.
+                RuntimePackage package = manifest.For(kind) ?? (kind == GameRuntimeKind.WineGdk ? manifest.For(GameRuntimeKind.GdkProton) : null)
+                    ?? throw new RuntimeInstallException(manifest.Problem ?? $"The runtime list has no {kind} build.");
                 await InstallRuntimePackage(package);
+                if (package.RuntimeKind is GameRuntimeKind installedKind && installedKind != kind)
+                {
+                    Trace.WriteLine($"{kind} is not available; using {installedKind} instead.");
+                    kind = installedKind;
+                }
             }
             catch (RuntimeInstallException ex)
             {
@@ -585,7 +595,13 @@ namespace BedrockLauncher.Handlers
             {
                 StartTask();
                 RuntimeManifest manifest = await Installer.GetManifestAsync(CancelSource.Token);
-                var wanted = new[] { manifest.For(GameRuntimeKind.WineUwp), manifest.For(LauncherSettings.Default.GdkRuntimeKind), manifest.Xodus };
+                if (manifest.Problem != null) report.Add(manifest.Problem);
+                var wanted = new[]
+                {
+                    manifest.For(GameRuntimeKind.WineUwp),
+                    manifest.For(LauncherSettings.Default.GdkRuntimeKind) ?? manifest.For(GameRuntimeKind.GdkProton),
+                    manifest.Xodus,
+                };
                 foreach (RuntimePackage package in wanted.Where(p => p != null))
                 {
                     if (Installer.IsUpToDate(package))
