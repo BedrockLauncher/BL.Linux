@@ -584,11 +584,12 @@ namespace BedrockLauncher.Handlers
 
         #region Helpers
 
-        /// <summary>New game files (Store download, GDK import, package import) need a signed-in account.</summary>
+        /// <summary>New game files (Store download, GDK import, package import) need a signed-in account that owns Minecraft.</summary>
         private static void RequireAccount()
         {
-            if (!AccountManager.Default.MayDownload)
-                throw new AccountRequiredException(LanguageManager.GetResource("Linux_AccountRequired"));
+            string reason = AccountManager.Default.DownloadBlockReason;
+            if (reason != null)
+                throw new AccountRequiredException(LanguageManager.GetResource(reason));
         }
 
         private void StartTask()

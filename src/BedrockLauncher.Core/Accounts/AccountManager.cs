@@ -9,9 +9,9 @@ using Newtonsoft.Json;
 namespace BedrockLauncher.Accounts
 {
     /// <summary>
-    /// The launcher's signed-in Microsoft / Xbox account. Downloading or importing game versions requires it; versions
-    /// already on disk play without it. Only the refresh token is kept, in ~/.config/BedrockLauncher/account.json
-    /// (mode 600).
+    /// The launcher's signed-in Microsoft / Xbox account. Downloading or importing game versions requires it AND a
+    /// verified Minecraft Bedrock license (<see cref="MinecraftOwnershipChecker"/>); versions already on disk play
+    /// without it. Only the refresh token is kept, in ~/.config/BedrockLauncher/account.json (mode 600).
     /// </summary>
     public sealed class AccountManager : INotifyPropertyChanged
     {
@@ -21,18 +21,48 @@ namespace BedrockLauncher.Accounts
         private void Changed(string name) => UiThread.Run(() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name)));
 
         private readonly XboxAuthenticator authenticator;
+        private readonly MinecraftOwnershipChecker ownershipChecker;
         private StoredAccount account;
 
-        public AccountManager(XboxAuthenticator authenticator = null) => this.authenticator = authenticator ?? new XboxAuthenticator();
+        /// <summary>How long a decisive answer (owned / not owned) is trusted when a later check cannot reach a service.</summary>
+        public static readonly TimeSpan OwnershipCacheLifetime = TimeSpan.FromDays(7);
+
+        public AccountManager(XboxAuthenticator authenticator = null, MinecraftOwnershipChecker ownershipChecker = null)
+        {
+            this.authenticator = authenticator ?? new XboxAuthenticator();
+            this.ownershipChecker = ownershipChecker ?? new MinecraftOwnershipChecker(
+                xodusCli: () => Runtime.Xodus.Locate(ViewModels.MainDataModel.Default.FilePaths.RuntimesFolder, Properties.LauncherSettings.Default.XodusPath),
+                xodusSignedIn: () => Properties.LauncherSettings.Default.XodusSignedIn);
+        }
 
         public bool IsSignedIn => account != null;
         public string Gamertag => account?.Gamertag;
         public string Xuid => account?.Xuid;
+        public OwnershipState Ownership => account?.Ownership?.State ?? OwnershipState.Unknown;
+        public OwnershipResult OwnershipDetails => account?.Ownership;
+        public bool IsCheckingOwnership { get; private set; }
+        public bool OwnsMinecraft => Ownership == OwnershipState.Owned;
 
         /// <summary>Tests and offline development: BL_SKIP_ACCOUNT_CHECK=1 lets downloads run without an account.</summary>
         public static bool CheckDisabled => Environment.GetEnvironmentVariable("BL_SKIP_ACCOUNT_CHECK") == "1";
 
-        public bool MayDownload => IsSignedIn || CheckDisabled;
+        public bool MayDownload => CheckDisabled || IsSignedIn && OwnsMinecraft;
+
+        /// <summary>Localization key of the reason downloads are blocked, or null when they are allowed.</summary>
+        public string DownloadBlockReason
+        {
+            get
+            {
+                if (MayDownload) return null;
+                if (!IsSignedIn) return "Linux_AccountRequired";
+                return Ownership switch
+                {
+                    OwnershipState.NotOwned => "Linux_NotOwned",
+                    OwnershipState.Unverified when account?.Ownership?.Detail == "app-not-approved" => "Linux_OwnershipAppNotApproved",
+                    _ => "Linux_OwnershipUnverified",
+                };
+            }
+        }
 
         public static string StorePath => Path.Combine(ViewModels.MainDataModel.Default.FilePaths.ConfigLocation, "account.json");
 
@@ -49,6 +79,40 @@ namespace BedrockLauncher.Accounts
         {
             Set(await authenticator.SignInAsync(ClientId, prompt, cancellationToken));
             Save();
+            await VerifyOwnershipAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Checks Minecraft Bedrock ownership for the signed-in account. An inconclusive answer (service unreachable)
+        /// keeps a recent decisive one so a flaky connection does not lock the user out.
+        /// </summary>
+        public async Task<OwnershipResult> VerifyOwnershipAsync(CancellationToken cancellationToken = default)
+        {
+            StoredAccount current = account;
+            if (current == null) return null;
+            IsCheckingOwnership = true;
+            Changed(nameof(IsCheckingOwnership));
+            try
+            {
+                OwnershipResult result = await ownershipChecker.CheckAsync(current.XboxUserToken, cancellationToken);
+                OwnershipResult previous = current.Ownership;
+                bool keepPrevious = result.State == OwnershipState.Unverified && previous != null
+                    && (previous.State == OwnershipState.Owned || previous.State == OwnershipState.NotOwned)
+                    && DateTime.UtcNow - previous.CheckedAt < OwnershipCacheLifetime;
+                if (!keepPrevious) current.Ownership = result;
+                Trace.WriteLine($"Minecraft Bedrock ownership: {current.Ownership}{(keepPrevious ? " (cached; now " + result + ")" : "")}");
+                if (ReferenceEquals(current, account))
+                {
+                    Save();
+                    RaiseAccountChanged();
+                }
+                return current.Ownership;
+            }
+            finally
+            {
+                IsCheckingOwnership = false;
+                Changed(nameof(IsCheckingOwnership));
+            }
         }
 
         /// <summary>Restores the stored account at start; a stale or revoked token signs the user out.</summary>
@@ -59,7 +123,9 @@ namespace BedrockLauncher.Accounts
             Set(stored);
             try
             {
-                Set(await authenticator.RefreshAsync(stored));
+                StoredAccount refreshed = await authenticator.RefreshAsync(stored);
+                refreshed.Ownership = stored.Ownership;
+                Set(refreshed);
                 Save();
             }
             catch (XboxAccountException ex)
@@ -71,7 +137,9 @@ namespace BedrockLauncher.Accounts
             {
                 // Offline: keep the stored account so installed versions and their data stay usable.
                 Trace.WriteLine($"Could not refresh the sign-in (offline?): {ex.Message}");
+                return;
             }
+            await VerifyOwnershipAsync();
         }
 
         public void SignOut()
@@ -84,10 +152,19 @@ namespace BedrockLauncher.Accounts
         private void Set(StoredAccount value)
         {
             account = value;
+            RaiseAccountChanged();
+        }
+
+        private void RaiseAccountChanged()
+        {
             Changed(nameof(IsSignedIn));
             Changed(nameof(Gamertag));
             Changed(nameof(Xuid));
+            Changed(nameof(Ownership));
+            Changed(nameof(OwnershipDetails));
+            Changed(nameof(OwnsMinecraft));
             Changed(nameof(MayDownload));
+            Changed(nameof(DownloadBlockReason));
         }
 
         private void Save()
