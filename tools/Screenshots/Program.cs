@@ -24,6 +24,13 @@ public static class Screenshots
         BedrockLauncher.Handlers.PathHandler.RootOverride = home;
         if (args.Length > 1) BedrockLauncher.Localization.Language.LanguageManager.Init(args[1]);
 
+        // A signed-in sample account (offline: the refresh fails and the stored state is shown), so the Accounts page
+        // shows the gamertag and the Minecraft license line.
+        Directory.CreateDirectory(Path.Combine(home, "config"));
+        File.WriteAllText(Path.Combine(home, "config", "account.json"),
+            "{\"Gamertag\":\"Steve2026\",\"Xuid\":\"2535400000000001\",\"RefreshToken\":\"x\",\"ClientId\":\"00000000-0000-0000-0000-000000000000\"," +
+            "\"Ownership\":{\"State\":1,\"Source\":\"xodus\",\"CheckedAt\":\"2099-01-01T00:00:00Z\"}}");
+
         AppBuilder.Configure<App>()
             .UseSkia()
             .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
