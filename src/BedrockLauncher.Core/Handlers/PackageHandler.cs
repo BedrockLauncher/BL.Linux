@@ -504,6 +504,16 @@ namespace BedrockLauncher.Handlers
                 }
                 command = Xodus.WrapRun(cli, command, v.GameDirectory, Constants.MINECRAFT_EXECUTABLE);
             }
+            if (v.IsGdk && runtime.UsesXodusInterop)
+            {
+                // WineGDK with Xodus interop: xgameruntime gets the Xbox Live sign-in from xodus-service and does not
+                // start without it.
+                string service = XodusService.Locate(XodusCli);
+                if (!await XodusService.Default.EnsureRunningAsync(service, Runner, Log, CancelSource.Token))
+                    throw new RuntimeNotFoundException(LanguageManager.GetResource("Linux_XodusServiceMissing"));
+                command.Environment["XDG_RUNTIME_DIR"] = XodusService.RuntimeDirectory;
+                if (!settings.XodusSignedIn) Trace.WriteLine("xodus-service: not signed in to Xodus, the game stays offline");
+            }
             if (settings.UseFastSync && !runtime.UsesProtonScript) command = LaunchCommandBuilder.WithRaisedFileLimit(command);
             Trace.WriteLine(File.Exists("/dev/ntsync") ? "ntsync: available" : "ntsync: /dev/ntsync not present (kernel 6.14+ with the ntsync module); esync is used where the runtime has it");
             gameRuntime = runtime;
