@@ -38,6 +38,9 @@ namespace BedrockLauncher.Runtime
 
         public RuntimePackage For(GameRuntimeKind kind) => Runtimes.FirstOrDefault(r => r.RuntimeKind == kind);
         public RuntimePackage Xodus => Runtimes.FirstOrDefault(r => r.IsXodus);
+
+        /// <summary>Why the BL.Linux list could not be used (then only the upstream GDK-Proton release is offered).</summary>
+        [JsonIgnore] public string Problem { get; set; }
     }
 
     /// <summary>What runtimes/&lt;folder&gt;/.bl-installed.json records about an installed package.</summary>
@@ -66,6 +69,8 @@ namespace BedrockLauncher.Runtime
     public sealed class RuntimeInstaller
     {
         public const string DefaultManifestUrl = "https://github.com/BedrockLauncher/BL.Linux/releases/download/runtimes/runtimes.json";
+        /// <summary>Used when runtimes.json is missing: GDK-Proton publishes its own releases.</summary>
+        public const string GdkProtonLatestApi = "https://api.github.com/repos/Weather-OS/GDK-Proton/releases/latest";
         public const string MarkerFile = ".bl-installed.json";
 
         private readonly HttpClient http;
@@ -91,6 +96,10 @@ namespace BedrockLauncher.Runtime
             }
         }
 
+        /// <summary>
+        /// The BL.Linux runtimes.json; when it cannot be read (not published yet, offline) the latest GDK-Proton release
+        /// is offered on its own and <see cref="RuntimeManifest.Problem"/> says why.
+        /// </summary>
         public async Task<RuntimeManifest> GetManifestAsync(CancellationToken cancellationToken = default)
         {
             string url = ManifestUrl;
@@ -101,12 +110,50 @@ namespace BedrockLauncher.Runtime
                 manifest.Runtimes.RemoveAll(r => string.IsNullOrEmpty(r.Url) || string.IsNullOrEmpty(r.Folder) || string.IsNullOrEmpty(r.Sha256));
                 return manifest;
             }
-            catch (Exception ex) when (ex is HttpRequestException || ex is JsonException || ex is IOException || ex is InvalidOperationException
-                                       || ex is UriFormatException || ex is TaskCanceledException && !cancellationToken.IsCancellationRequested)
+            catch (Exception ex) when (IsReadError(ex, cancellationToken))
             {
-                throw new RuntimeInstallException($"Could not read the runtime list ({url}): {ex.Message}", ex);
+                string problem = ex is HttpRequestException { StatusCode: System.Net.HttpStatusCode.NotFound }
+                    ? string.Format(Localization.Language.LanguageManager.GetResource("Linux_RuntimesNotPublished"), url)
+                    : $"Could not read the runtime list ({url}): {ex.Message}";
+                Trace.WriteLine(problem);
+                RuntimePackage gdkProton = null;
+                try { gdkProton = await GetLatestGdkProtonAsync(cancellationToken); }
+                catch (Exception fallback) when (IsReadError(fallback, cancellationToken)) { Trace.WriteLine($"GDK-Proton release: {fallback.Message}"); }
+                if (gdkProton == null) throw new RuntimeInstallException(problem, ex);
+                return new RuntimeManifest { Runtimes = { gdkProton }, Problem = problem };
             }
         }
+
+        /// <summary>The newest Weather-OS/GDK-Proton release as a package (SHA-256 from GitHub's asset digest).</summary>
+        public async Task<RuntimePackage> GetLatestGdkProtonAsync(CancellationToken cancellationToken = default)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, GdkProtonLatestApi);
+            request.Headers.UserAgent.ParseAdd("BL.Linux");
+            request.Headers.Accept.ParseAdd("application/vnd.github+json");
+            using var response = await http.SendAsync(request, cancellationToken);
+            response.EnsureSuccessStatusCode();
+            var release = Newtonsoft.Json.Linq.JObject.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
+            var asset = (release["assets"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
+                .FirstOrDefault(a => ((string)a["name"] ?? "").EndsWith(".tar.gz") || ((string)a["name"] ?? "").EndsWith(".tar.xz") || ((string)a["name"] ?? "").EndsWith(".tar.zst"));
+            if (asset == null) return null;
+            string name = (string)asset["name"];
+            string digest = (string)asset["digest"];
+            return new RuntimePackage
+            {
+                Id = "gdk-proton",
+                Kind = nameof(GameRuntimeKind.GdkProton),
+                Version = (string)release["tag_name"],
+                Url = (string)asset["browser_download_url"],
+                Sha256 = digest != null && digest.StartsWith("sha256:") ? digest.Substring(7) : null,
+                Size = (long?)asset["size"] ?? 0,
+                Folder = name.Substring(0, name.IndexOf(".tar", StringComparison.Ordinal)),
+                Description = "Weather-OS/GDK-Proton (upstream release)",
+            };
+        }
+
+        private static bool IsReadError(Exception ex, CancellationToken cancellationToken) =>
+            ex is HttpRequestException || ex is JsonException || ex is IOException || ex is InvalidOperationException
+            || ex is UriFormatException || ex is TaskCanceledException && !cancellationToken.IsCancellationRequested;
 
         public InstalledRuntime GetInstalled(RuntimePackage package)
         {
@@ -115,8 +162,13 @@ namespace BedrockLauncher.Runtime
             catch (Exception ex) when (ex is IOException || ex is JsonException) { return null; }
         }
 
-        public bool IsUpToDate(RuntimePackage package) =>
-            string.Equals(GetInstalled(package)?.Sha256, package.Sha256, StringComparison.OrdinalIgnoreCase);
+        public bool IsUpToDate(RuntimePackage package)
+        {
+            InstalledRuntime installed = GetInstalled(package);
+            return package.Sha256 == null
+                ? installed != null && installed.Version == package.Version
+                : string.Equals(installed?.Sha256, package.Sha256, StringComparison.OrdinalIgnoreCase);
+        }
 
         /// <summary>Downloads, verifies and unpacks a package into runtimes/&lt;folder&gt;, replacing an older copy.</summary>
         /// <param name="progress">(bytes downloaded, total bytes; 0 when unknown)</param>
@@ -137,7 +189,9 @@ namespace BedrockLauncher.Runtime
                 await DownloadAsync(package, partial, progress, cancellationToken);
 
                 string hash = await Sha256Async(partial, cancellationToken);
-                if (!hash.Equals(package.Sha256, StringComparison.OrdinalIgnoreCase))
+                if (package.Sha256 == null)
+                    log($"Runtime {package.Id}: no published SHA-256, downloaded over HTTPS from {new Uri(package.Url).Host} (SHA-256 {hash})");
+                else if (!hash.Equals(package.Sha256, StringComparison.OrdinalIgnoreCase))
                     throw new RuntimeInstallException($"{Path.GetFileName(archive)} is damaged (SHA-256 {hash}, expected {package.Sha256}). Try again.");
                 File.Move(partial, archive, true);
 
@@ -149,11 +203,13 @@ namespace BedrockLauncher.Runtime
                 int code = await runner.RunAsync(tar, log, cancellationToken);
                 string unpacked = Path.Combine(staging, package.Folder);
                 if (code != 0) throw new RuntimeInstallException($"tar could not unpack {Path.GetFileName(archive)} (exit code {code}). For .tar.zst archives the zstd program is needed.");
+                string[] top = Directory.GetDirectories(staging);
+                if (!Directory.Exists(unpacked) && top.Length == 1) Directory.Move(top[0], unpacked);
                 if (!Directory.Exists(unpacked)) throw new RuntimeInstallException($"{Path.GetFileName(archive)} does not contain the folder {package.Folder}.");
 
                 await File.WriteAllTextAsync(Path.Combine(unpacked, MarkerFile), JsonConvert.SerializeObject(new InstalledRuntime
                 {
-                    Id = package.Id, Version = package.Version, Sha256 = package.Sha256, Installed = DateTime.UtcNow,
+                    Id = package.Id, Version = package.Version, Sha256 = package.Sha256 ?? hash, Installed = DateTime.UtcNow,
                 }, Formatting.Indented), cancellationToken);
 
                 string target = Path.Combine(runtimesFolder, package.Folder);
