@@ -47,7 +47,7 @@
             <TextBox x:Name="XodusPathBox" Width="460" HorizontalAlignment="Left" Margin="42,0,0,0" FontFamily="monospace" LostFocus="XodusPath_LostFocus"/>
 
             <TextBlock Margin="42,30,0,5" Text="{DynamicResource Linux_Account_ClientId}" Classes="HeaderTextblock"/>
-            <TextBox x:Name="ClientIdBox" Width="460" HorizontalAlignment="Left" Margin="42,0,0,0" FontFamily="monospace" Watermark="00000000-0000-0000-0000-000000000000" LostFocus="ClientId_LostFocus"/>
+            <TextBox x:Name="ClientIdBox" Width="460" HorizontalAlignment="Left" Margin="42,0,0,0" FontFamily="monospace" Watermark="e2e40a45-c8e9-47ef-bf59-de46d75e5f86" LostFocus="ClientId_LostFocus"/>
             <TextBlock Margin="42,6,30,0" Text="{DynamicResource Linux_Account_ClientIdHelp}" Foreground="{DynamicResource TertiaryText.Foreground}" FontSize="12" TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left"/>
         </StackPanel>
     </ScrollViewer>
