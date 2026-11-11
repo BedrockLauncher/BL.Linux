@@ -9,9 +9,10 @@ can `BL_MSA_CLIENT_ID`.
 
 In [portal.azure.com](https://portal.azure.com) > **App registrations** > the app:
 
-1. **Overview / Manifest**: supported account types = **Personal Microsoft accounts only**
-   (`"signInAudience": "PersonalMicrosoftAccount"`). The launcher uses the `consumers` endpoint, so work and school
-   accounts are not used.
+1. **Manifest**: `"signInAudience": "PersonalMicrosoftAccount"` (shown as "Personal Microsoft accounts only") and,
+   in the `api` section, `"requestedAccessTokenVersion": 2` (Azure refuses personal accounts without it). An app
+   created as "Accounts in this organizational directory only" can be switched here; "Accounts in any organizational
+   directory and personal Microsoft accounts" works too. The launcher uses the `consumers` endpoint.
 2. **Authentication** > **Add a platform** > **Mobile and desktop applications** > custom redirect URI
    **`http://localhost`** > Configure.
    The browser sign-in listens on `http://localhost:<free port>`; for loopback addresses Microsoft accepts any port
@@ -20,6 +21,16 @@ In [portal.azure.com](https://portal.azure.com) > **App registrations** > the ap
    This enables the "Use a code" sign-in (device code, microsoft.com/link).
 4. Save. **Certificates & secrets** stays empty. **API permissions** need nothing extra: the scopes
    `XboxLive.signin offline_access` are requested at sign-in.
+
+## Errors and what they mean
+
+| Error | Fix |
+| --- | --- |
+| `redirect_uri is not valid` / AADSTS50011 (in the browser) | step 2: add `http://localhost` under Mobile and desktop applications (not under Web) |
+| AADSTS7000218, `client_assertion or client_secret` | step 3: Allow public client flows = Yes |
+| AADSTS700016, `not enabled for consumers`, AADSTS9002331 | step 1: personal Microsoft accounts |
+
+Changes in Azure apply within a few minutes. Meanwhile "Use a code" in the sign-in window needs only step 3.
 
 ## How the sign-in works
 

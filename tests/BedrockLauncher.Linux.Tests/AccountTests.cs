@@ -136,5 +136,15 @@ namespace BedrockLauncher.Linux.Tests
             using var cancel = new CancellationTokenSource();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => auth.SignInWithBrowserAsync("id", _ => cancel.CancelAfter(200), cancel.Token));
         }
+    
+        [Theory]
+        [InlineData("invalid_client", "AADSTS7000218: The request body must contain the following parameter: 'client_assertion' or 'client_secret'.", "public client flows")]
+        [InlineData("unauthorized_client", "The client does not exist or is not enabled for consumers.", "PersonalMicrosoftAccount")]
+        [InlineData("invalid_request", "AADSTS50011: The redirect URI 'http://localhost:4000' does not match", "http://localhost")]
+        public void Azure_app_misconfigurations_say_what_to_change(string error, string description, string hint)
+        {
+            Assert.Contains(hint, XboxAuthenticator.DescribeAadError(error, description));
+            Assert.Null(XboxAuthenticator.DescribeAadError("authorization_pending", null));
+        }
     }
 }
