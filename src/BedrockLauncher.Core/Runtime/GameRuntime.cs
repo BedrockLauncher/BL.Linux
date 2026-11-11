@@ -45,6 +45,25 @@ namespace BedrockLauncher.Runtime
 
         public bool UsesProtonScript => Kind == GameRuntimeKind.GdkProton;
 
+        /// <summary>
+        /// WineGDK built with XODUS_INTEROP=1 (runtime/winegdk/build.sh): xgameruntime signs the game in to Xbox Live
+        /// through xodus-service, and fails its init when the service is not running.
+        /// </summary>
+        public bool UsesXodusInterop => ReadDescriptor()?["xodusInterop"] is JValue { Type: JTokenType.Boolean } flag && (bool)flag;
+
+        private JObject ReadDescriptor()
+        {
+            try
+            {
+                string descriptor = Path.Combine(RootPath ?? "", "bl-runtime.json");
+                return File.Exists(descriptor) ? JObject.Parse(File.ReadAllText(descriptor)) : null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         public bool IsUsable => UsesProtonScript ? File.Exists(ProtonScript) : WineBinary != null;
 
         public string Version
