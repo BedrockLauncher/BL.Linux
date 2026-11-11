@@ -38,6 +38,7 @@
                         <TextBlock x:Name="XodusPathText" Foreground="{DynamicResource TertiaryText.Foreground}" FontSize="11" FontFamily="monospace"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="XodusInstallButton" Content="{DynamicResource Linux_Xodus_Install}" Theme="{StaticResource DialogButton_Green}" Click="XodusInstall_Click"/>
                         <Button x:Name="XodusSignInButton" Content="{DynamicResource Linux_Xodus_SignIn}" Theme="{StaticResource DialogButton_Green}" Click="XodusSignIn_Click"/>
                         <Button x:Name="XodusSignOutButton" Content="{DynamicResource Linux_Account_SignOut}" Theme="{StaticResource DialogButton_Red}" Click="XodusSignOut_Click"/>
                     </StackPanel>

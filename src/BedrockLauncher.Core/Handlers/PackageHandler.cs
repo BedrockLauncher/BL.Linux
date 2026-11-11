@@ -566,6 +566,31 @@ namespace BedrockLauncher.Handlers
             return Locator.Resolve(kind, configured) ?? throw new RuntimeNotFoundException(missing);
         }
 
+        /// <summary>Settings > Accounts: downloads Xodus now. Returns null when installed, else the reason.</summary>
+        public async Task<string> InstallXodusNow()
+        {
+            try
+            {
+                StartTask();
+                RuntimeManifest manifest = await Installer.GetManifestAsync(CancelSource.Token);
+                RuntimePackage package = manifest.Xodus ?? throw new RuntimeInstallException(manifest.Problem ?? "The runtime list has no Xodus build.");
+                await InstallRuntimePackage(package);
+                return XodusCli == null ? "xodus-cli is missing from the downloaded package." : null;
+            }
+            catch (RuntimeInstallException ex)
+            {
+                return ex.Message;
+            }
+            catch (OperationCanceledException)
+            {
+                return LanguageManager.GetResource("Linux_RuntimeCancelled");
+            }
+            finally
+            {
+                EndTask();
+            }
+        }
+
         /// <summary>Downloads xodus-cli + xodus-service; null (and the reason in the log) when that is not possible.</summary>
         private async Task<string> TryInstallXodus()
         {

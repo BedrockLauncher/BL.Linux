@@ -47,8 +47,8 @@ namespace BedrockLauncher.Pages.Settings
             string cli = Xodus.Locate(MainDataModel.Default.FilePaths.RuntimesFolder, settings.XodusPath);
             XodusPathText.Text = cli ?? LanguageManager.GetResource("Linux_Xodus_NotInstalled");
             XodusStatus.Text = LanguageManager.GetResource(settings.XodusSignedIn ? "Linux_Xodus_SignedIn" : "Linux_Xodus_SignedOut");
-            XodusSignInButton.IsVisible = !settings.XodusSignedIn;
-            XodusSignInButton.IsEnabled = cli != null;
+            XodusInstallButton.IsVisible = cli == null;
+            XodusSignInButton.IsVisible = cli != null && !settings.XodusSignedIn;
             XodusSignOutButton.IsVisible = settings.XodusSignedIn;
         }
 
@@ -74,6 +74,21 @@ namespace BedrockLauncher.Pages.Settings
             // The Xodus account can confirm the Store license when Minecraft services could not.
             if (code == 0 && AccountManager.Default.IsSignedIn && !AccountManager.Default.OwnsMinecraft)
                 await AccountManager.Default.VerifyOwnershipAsync();
+        }
+
+        private async void XodusInstall_Click(object sender, RoutedEventArgs e)
+        {
+            XodusInstallButton.IsEnabled = false;
+            try
+            {
+                string problem = await MainDataModel.Default.PackageManager.InstallXodusNow();
+                Update();
+                if (problem != null) await ErrorScreen.ShowMessage(LanguageManager.GetResource("Linux_Xodus_Title"), problem);
+            }
+            finally
+            {
+                XodusInstallButton.IsEnabled = true;
+            }
         }
 
         private async void XodusSignOut_Click(object sender, RoutedEventArgs e)
