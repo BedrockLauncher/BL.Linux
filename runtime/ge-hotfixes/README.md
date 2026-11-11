@@ -1,7 +1,7 @@
 # GE-Proton wine hotfixes
 
-Taken unchanged from GE-Proton's `patches/wine-hotfixes/pending` (proton-ge-custom `cc7c349`, November 2026).
-GE-Proton now relies on ntsync rather than fsync, so these are the parts of its wine that still matter here:
+Taken from GE-Proton's `patches/wine-hotfixes/pending` (proton-ge-custom `cc7c349`, November 2026); the code of each
+patch is unchanged. GE-Proton now relies on ntsync rather than fsync, so these are the parts of its wine that still matter here:
 small fixes for performance and stability that are not in Wine yet.
 
 | Patch | Effect |
