@@ -11,14 +11,16 @@ using BedrockLauncher.ViewModels;
 namespace BedrockLauncher.Pages.Common
 {
     /// <summary>
-    /// Microsoft sign-in: opens Microsoft's page in the browser, which redirects back to the launcher on localhost.
-    /// "Use a code" switches to the device code flow (type a code on microsoft.com/link, e.g. from a phone).
+    /// Microsoft sign-in. Default: device code (the code is copied and microsoft.com/link opens; works with any
+    /// redirect URI setup, only "Allow public client flows" is needed). "Sign in with the browser" switches to the
+    /// authorization code flow with the http://localhost redirect, which comes back to the launcher by itself.
     /// </summary>
     public partial class SignInDialog : UserControl
     {
         private readonly CancellationTokenSource cancel = new();
-        private CancellationTokenSource browserCancel;
-        private bool useCode;
+        private CancellationTokenSource codeCancel;
+        private bool useBrowser;
+        private bool browserOpened;
         private string verificationUri;
 
         public SignInDialog() => InitializeComponent();
@@ -30,14 +32,14 @@ namespace BedrockLauncher.Pages.Common
             MainViewModel.Default.SetDialogFrame(dialog);
             try
             {
-                dialog.browserCancel = CancellationTokenSource.CreateLinkedTokenSource(dialog.cancel.Token);
+                dialog.codeCancel = CancellationTokenSource.CreateLinkedTokenSource(dialog.cancel.Token);
                 try
                 {
-                    await AccountManager.Default.SignInWithBrowserAsync(prompt => Dispatcher.UIThread.Post(() => dialog.ShowBrowserPrompt(prompt)), dialog.browserCancel.Token);
+                    await AccountManager.Default.SignInAsync(prompt => Dispatcher.UIThread.Post(() => dialog.ShowPrompt(prompt)), dialog.codeCancel.Token);
                 }
-                catch (OperationCanceledException) when (dialog.useCode && !dialog.cancel.IsCancellationRequested)
+                catch (OperationCanceledException) when (dialog.useBrowser && !dialog.cancel.IsCancellationRequested)
                 {
-                    await AccountManager.Default.SignInAsync(prompt => Dispatcher.UIThread.Post(() => dialog.ShowPrompt(prompt)), dialog.cancel.Token);
+                    await AccountManager.Default.SignInWithBrowserAsync(prompt => Dispatcher.UIThread.Post(() => dialog.ShowBrowserPrompt(prompt)), dialog.cancel.Token);
                 }
                 MainViewModel.Default.SetDialogFrame(null);
                 return true;
@@ -49,9 +51,33 @@ namespace BedrockLauncher.Pages.Common
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Trace.WriteLine($"Sign-in failed: {ex}");
                 MainViewModel.Default.SetDialogFrame(null);
                 await ErrorScreen.ShowMessage(LanguageManager.GetResource("Linux_Account_CodeTitle"), ex.Message);
                 return false;
+            }
+        }
+
+        private async void ShowPrompt(DeviceCodePrompt prompt)
+        {
+            verificationUri = prompt.VerificationUri;
+            Instructions.Text = string.Format(LanguageManager.GetResource("Linux_Account_CodeText"), prompt.VerificationUri);
+            CodeText.Text = prompt.UserCode;
+            CodeText.IsVisible = CopyButton.IsVisible = true;
+            OpenBrowserButton.IsEnabled = UseBrowserButton.IsEnabled = true;
+            try
+            {
+                var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+                if (clipboard != null) await clipboard.SetTextAsync(prompt.UserCode);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.WriteLine($"Could not copy the sign-in code: {ex.Message}");
+            }
+            if (!browserOpened)
+            {
+                browserOpened = true;
+                Platform.OpenUrl(prompt.VerificationUri);
             }
         }
 
@@ -59,25 +85,16 @@ namespace BedrockLauncher.Pages.Common
         {
             verificationUri = prompt.AuthorizeUrl;
             Instructions.Text = LanguageManager.GetResource("Linux_Account_BrowserText");
-            OpenBrowserButton.IsEnabled = UseCodeButton.IsEnabled = true;
+            CodeText.IsVisible = CopyButton.IsVisible = UseBrowserButton.IsVisible = false;
+            OpenBrowserButton.IsEnabled = true;
             Platform.OpenUrl(prompt.AuthorizeUrl);
         }
 
-        private void ShowPrompt(DeviceCodePrompt prompt)
+        private void UseBrowser_Click(object sender, RoutedEventArgs e)
         {
-            verificationUri = prompt.VerificationUri;
-            Instructions.Text = string.Format(LanguageManager.GetResource("Linux_Account_CodeText"), prompt.VerificationUri);
-            CodeText.Text = prompt.UserCode;
-            CodeText.IsVisible = CopyButton.IsVisible = true;
-            UseCodeButton.IsVisible = false;
-            OpenBrowserButton.IsEnabled = true;
-        }
-
-        private void UseCode_Click(object sender, RoutedEventArgs e)
-        {
-            useCode = true;
-            OpenBrowserButton.IsEnabled = UseCodeButton.IsEnabled = false;
-            browserCancel?.Cancel();
+            useBrowser = true;
+            OpenBrowserButton.IsEnabled = UseBrowserButton.IsEnabled = false;
+            codeCancel?.Cancel();
         }
 
         private void OpenBrowser_Click(object sender, RoutedEventArgs e) => Platform.OpenUrl(verificationUri);

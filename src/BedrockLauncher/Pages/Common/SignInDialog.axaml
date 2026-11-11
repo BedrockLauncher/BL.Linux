@@ -13,7 +13,7 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <Button x:Name="OpenBrowserButton" Content="{DynamicResource Linux_Account_OpenBrowser}" Theme="{StaticResource DialogButton_Green}" Click="OpenBrowser_Click" IsEnabled="False"/>
                     <Button x:Name="CopyButton" Content="{DynamicResource Linux_Account_CopyCode}" Theme="{StaticResource DialogButton}" Click="Copy_Click" IsVisible="False"/>
-                    <Button x:Name="UseCodeButton" Content="{DynamicResource Linux_Account_UseCode}" Theme="{StaticResource DialogButton}" Click="UseCode_Click" IsEnabled="False"/>
+                    <Button x:Name="UseBrowserButton" Content="{DynamicResource Linux_Account_UseBrowser}" Theme="{StaticResource DialogButton}" Click="UseBrowser_Click" IsEnabled="False"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
                     <g:LoaderIcon Width="18" Height="18" x:Name="Spinner"/>
