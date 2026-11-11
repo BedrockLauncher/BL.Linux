@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="BedrockLauncher.Pages.Settings.LinuxSettingsPage"
              Background="#FF1F1F1F">
-    <!-- Linux only: compatibility runtimes for UWP (wine-uwp) and GDK (GDK-Proton / WineGDK) builds. Same look as GeneralSettingsPage. -->
+    <!-- Linux only. Simple by default: what is installed, one button, a few toggles. Paths and tuning are under "Advanced". -->
     <ScrollViewer>
         <StackPanel Margin="0,0,0,20">
             <StackPanel.Styles>
@@ -17,68 +17,85 @@
                     <Setter Property="Foreground" Value="White"/>
                     <Setter Property="Margin" Value="42,0,0,10"/>
                 </Style>
+                <Style Selector="TextBlock.RowTitle">
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="FontSize" Value="14"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </Style>
             </StackPanel.Styles>
             <Border Margin="30,24,30,8" Padding="24,20" Background="#FF282828" BorderBrush="#FF4A4A4A" BorderThickness="1">
                 <TextBlock Text="{DynamicResource Linux_SettingsTab}" Foreground="White" FontFamily="{StaticResource MinecraftTen}" FontSize="32"/>
             </Border>
 
-            <TextBlock Margin="42,30,0,0" Text="{DynamicResource Linux_Settings_UwpTitle}" Classes="HeaderTextblock"/>
-            <TextBlock Margin="42,5,0,0" Text="{DynamicResource Linux_Settings_UwpText}" Classes="Text"/>
-            <TextBlock Margin="42,12,0,5" Text="{DynamicResource Linux_Settings_RuntimePath}" Classes="HeaderTextblock"/>
-            <ContentControl Theme="{StaticResource TextboxLikeFrame}" Height="32" Width="560" HorizontalAlignment="Left" Margin="42,0,0,0">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBox Theme="{StaticResource BlankTextBox}" x:Name="UwpPath" FontSize="14" Padding="10,4,5,3" LostFocus="Path_LostFocus"/>
-                    <Button Grid.Column="1" Content="{DynamicResource Linux_Settings_Browse}" Click="BrowseUwp_Click" Margin="5" Background="Transparent" Foreground="White" Padding="6,0"/>
+            <!-- Runtimes: status + one button -->
+            <TextBlock Margin="42,30,0,0" Text="{DynamicResource Linux_Settings_AutoTitle}" Classes="HeaderTextblock"/>
+            <TextBlock Margin="42,5,0,10" Text="{DynamicResource Linux_Settings_AutoText}" Classes="Text"/>
+            <Border Margin="42,0,30,0" Padding="16,12" Background="#FF282828" BorderBrush="#FF4A4A4A" BorderThickness="1" HorizontalAlignment="Left" MinWidth="560">
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
+                    <TextBlock Grid.Row="0" Classes="RowTitle" Text="{DynamicResource Linux_Settings_UwpShort}" Margin="0,4,24,4"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="UwpStatus" FontSize="13" Margin="0,5" TextWrapping="Wrap"/>
+                    <TextBlock Grid.Row="1" Classes="RowTitle" Text="{DynamicResource Linux_Settings_GdkShort}" Margin="0,4,24,4"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="GdkStatus" FontSize="13" Margin="0,5" TextWrapping="Wrap"/>
+                    <TextBlock Grid.Row="2" Classes="RowTitle" Text="Xodus" Margin="0,4,24,4"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="XodusStatus" FontSize="13" Margin="0,5" TextWrapping="Wrap"/>
                 </Grid>
-            </ContentControl>
+            </Border>
+            <StackPanel Orientation="Horizontal" Margin="38,10,0,0">
+                <Button x:Name="InstallRuntimesButton" Content="{DynamicResource Linux_Settings_InstallRuntimes}" Click="InstallRuntimes_Click" Theme="{StaticResource DialogButton_Green}"/>
+            </StackPanel>
+            <TextBlock x:Name="InstallReport" Margin="42,8,30,0" Classes="Text" IsVisible="False"/>
+            <CheckBox x:Name="AutoInstallRuntimes" Margin="42,12,0,0" Content="{DynamicResource Linux_Settings_AutoInstall}" Click="Option_Click"/>
 
-            <TextBlock Margin="42,30,0,0" Text="{DynamicResource Linux_Settings_GdkTitle}" Classes="HeaderTextblock"/>
-            <TextBlock Margin="42,5,0,0" Text="{DynamicResource Linux_Settings_GdkText}" Classes="Text"/>
-            <TextBlock Margin="42,12,0,5" Text="{DynamicResource Linux_Settings_Runtime}" Classes="HeaderTextblock"/>
+            <TextBlock Margin="42,24,0,5" Text="{DynamicResource Linux_Settings_GdkRuntime}" Classes="HeaderTextblock"/>
             <ComboBox x:Name="GdkKind" Theme="{StaticResource BlankComboBoxStyle}" Width="260" HorizontalAlignment="Left" Margin="42,0,0,0" SelectionChanged="GdkKind_SelectionChanged">
                 <ComboBoxItem Content="WineGDK" Tag="WineGdk"/>
                 <ComboBoxItem Content="GDK-Proton" Tag="GdkProton"/>
             </ComboBox>
-            <TextBlock Margin="42,12,0,5" Text="{DynamicResource Linux_Settings_RuntimePath}" Classes="HeaderTextblock"/>
-            <ContentControl Theme="{StaticResource TextboxLikeFrame}" Height="32" Width="560" HorizontalAlignment="Left" Margin="42,0,0,0">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBox Theme="{StaticResource BlankTextBox}" x:Name="GdkPath" FontSize="14" Padding="10,4,5,3" LostFocus="Path_LostFocus"/>
-                    <Button Grid.Column="1" Content="{DynamicResource Linux_Settings_Browse}" Click="BrowseGdk_Click" Margin="5" Background="Transparent" Foreground="White" Padding="6,0"/>
-                </Grid>
-            </ContentControl>
-
-            <TextBlock Margin="42,30,0,0" Text="{DynamicResource Linux_Settings_AutoTitle}" Classes="HeaderTextblock"/>
-            <TextBlock Margin="42,5,0,10" Text="{DynamicResource Linux_Settings_AutoText}" Classes="Text"/>
-            <CheckBox x:Name="AutoInstallRuntimes" Content="{DynamicResource Linux_Settings_AutoInstall}" Click="Option_Click"/>
-            <StackPanel Orientation="Horizontal" Margin="38,0,0,0">
-                <Button x:Name="InstallRuntimesButton" Content="{DynamicResource Linux_Settings_InstallRuntimes}" Click="InstallRuntimes_Click" Theme="{StaticResource DialogButton_Green}"/>
-            </StackPanel>
-            <TextBlock x:Name="InstallReport" Margin="42,8,0,0" Classes="Text" FontFamily="monospace" IsVisible="False"/>
-
-            <TextBlock Margin="42,30,0,5" Text="{DynamicResource Linux_Settings_Detected}" Classes="HeaderTextblock"/>
-            <ItemsControl x:Name="DetectedList" Margin="42,0,0,0">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding}" Foreground="White" FontSize="13" FontFamily="monospace" Margin="0,2"/>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            <StackPanel Orientation="Horizontal" Margin="38,8,0,0">
-                <Button Content="{DynamicResource GeneralText_Refresh}" Click="Detect_Click" Theme="{StaticResource DialogButton}"/>
-                <Button Content="{DynamicResource Linux_Settings_OpenRuntimes}" Click="OpenRuntimes_Click" Theme="{StaticResource DialogButton}"/>
-                <Button Content="{DynamicResource Linux_Settings_OpenLogs}" Click="OpenLogs_Click" Theme="{StaticResource DialogButton}"/>
-            </StackPanel>
 
             <TextBlock Margin="42,30,0,10" Text="{DynamicResource Linux_Settings_Graphics}" Classes="HeaderTextblock"/>
             <CheckBox x:Name="UseDxvk" Content="{DynamicResource Linux_Settings_UseDxvk}" Click="Option_Click"/>
             <CheckBox x:Name="UseFastSync" Content="{DynamicResource Linux_Settings_FastSync}" Click="Option_Click"/>
             <CheckBox x:Name="UseGameMode" Content="{DynamicResource Linux_Settings_GameMode}" Click="Option_Click"/>
             <CheckBox x:Name="UseMangoHud" Content="{DynamicResource Linux_Settings_MangoHud}" Click="Option_Click"/>
-            <TextBlock Margin="42,12,0,5" Text="{DynamicResource Linux_Settings_WineDebug}" Classes="HeaderTextblock"/>
-            <TextBox x:Name="WineDebug" Width="260" HorizontalAlignment="Left" Margin="42,0,0,0" Watermark="-all" LostFocus="Path_LostFocus"/>
-            <TextBlock Margin="42,12,0,5" Text="{DynamicResource Linux_Settings_Env}" Classes="HeaderTextblock"/>
-            <TextBox x:Name="ExtraEnvironment" Width="560" Height="90" HorizontalAlignment="Left" Margin="42,0,0,0" AcceptsReturn="True" FontFamily="monospace" FontSize="12"
-                     Watermark="DXVK_HUD=fps" LostFocus="Path_LostFocus"/>
+
+            <!-- Advanced: hidden until asked for -->
+            <Button x:Name="AdvancedToggle" Margin="38,20,0,0" Content="{DynamicResource Linux_Settings_ShowAdvanced}" Click="Advanced_Click" Theme="{StaticResource DialogButton}"/>
+            <StackPanel x:Name="Advanced" IsVisible="False">
+                <TextBlock Margin="42,20,0,5" Text="{DynamicResource Linux_Settings_UwpPath}" Classes="HeaderTextblock"/>
+                <ContentControl Theme="{StaticResource TextboxLikeFrame}" Height="32" Width="560" HorizontalAlignment="Left" Margin="42,0,0,0">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Theme="{StaticResource BlankTextBox}" x:Name="UwpPath" FontSize="14" Padding="10,4,5,3" LostFocus="Path_LostFocus"/>
+                        <Button Grid.Column="1" Content="{DynamicResource Linux_Settings_Browse}" Click="BrowseUwp_Click" Margin="5" Background="Transparent" Foreground="White" Padding="6,0"/>
+                    </Grid>
+                </ContentControl>
+                <TextBlock Margin="42,12,0,5" Text="{DynamicResource Linux_Settings_GdkPath}" Classes="HeaderTextblock"/>
+                <ContentControl Theme="{StaticResource TextboxLikeFrame}" Height="32" Width="560" HorizontalAlignment="Left" Margin="42,0,0,0">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Theme="{StaticResource BlankTextBox}" x:Name="GdkPath" FontSize="14" Padding="10,4,5,3" LostFocus="Path_LostFocus"/>
+                        <Button Grid.Column="1" Content="{DynamicResource Linux_Settings_Browse}" Click="BrowseGdk_Click" Margin="5" Background="Transparent" Foreground="White" Padding="6,0"/>
+                    </Grid>
+                </ContentControl>
+
+                <TextBlock Margin="42,20,0,5" Text="{DynamicResource Linux_Settings_Detected}" Classes="HeaderTextblock"/>
+                <ItemsControl x:Name="DetectedList" Margin="42,0,30,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" Foreground="White" FontSize="12" FontFamily="monospace" Margin="0,2" TextWrapping="Wrap"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <StackPanel Orientation="Horizontal" Margin="38,8,0,0">
+                    <Button Content="{DynamicResource GeneralText_Refresh}" Click="Detect_Click" Theme="{StaticResource DialogButton}"/>
+                    <Button Content="{DynamicResource Linux_Settings_OpenRuntimes}" Click="OpenRuntimes_Click" Theme="{StaticResource DialogButton}"/>
+                    <Button Content="{DynamicResource Linux_Settings_OpenLogs}" Click="OpenLogs_Click" Theme="{StaticResource DialogButton}"/>
+                </StackPanel>
+
+                <TextBlock Margin="42,20,0,5" Text="{DynamicResource Linux_Settings_WineDebug}" Classes="HeaderTextblock"/>
+                <TextBox x:Name="WineDebug" Width="260" HorizontalAlignment="Left" Margin="42,0,0,0" Watermark="-all" LostFocus="Path_LostFocus"/>
+                <TextBlock Margin="42,12,0,5" Text="{DynamicResource Linux_Settings_Env}" Classes="HeaderTextblock"/>
+                <TextBox x:Name="ExtraEnvironment" Width="560" Height="90" HorizontalAlignment="Left" Margin="42,0,0,0" AcceptsReturn="True" FontFamily="monospace" FontSize="12"
+                         Watermark="DXVK_HUD=fps" LostFocus="Path_LostFocus"/>
+            </StackPanel>
         </StackPanel>
     </ScrollViewer>
 </UserControl>
